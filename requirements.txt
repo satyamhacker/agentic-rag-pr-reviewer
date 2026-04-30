@@ -15,6 +15,7 @@ pypdf
 
 # Embeddings & LLM (Local)
 ollama
+langchain-ollama
 
 # Web Scraping
 playwright

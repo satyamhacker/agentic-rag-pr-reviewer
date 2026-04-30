@@ -1,42 +1,4 @@
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🗂️ FILE-TO-MODULE MAP (Kaunsi file kahan kaam aayegi)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-agentic-rag-pr-reviewer/
-├── .env                        ← API keys (LangSmith, HuggingFace) — set karo before starting
-├── .gitignore                  ← chroma_db/, .env already added
-├── requirements.txt            ← pip install -r requirements.txt — sabse pehle run karo
-│
-├── knowledge_base_pdf/         ← Module 1 (Level 1.1) — teeno PDFs yahan hain
-│   ├── html_cheatsheet.pdf
-│   ├── javascript_cheatsheet.pdf
-│   └── mysql_cheatsheet.pdf
-│
-├── database/
-│   └── chroma_db/              ← Module 1 (Level 1.2) — ingest.py chalane ke baad SQLite banega
-│
-├── core/
-│   ├── config.py               ← Har module mein use hoga (LLM init, paths, env vars)
-│   └── state.py                ← Module 3 (Level 3.2) — AgentState TypedDict
-│
-├── tools/
-│   ├── rag_retriever.py        ← Module 2 (Level 2.2) — check_html_syntax, check_js_logic, check_sql_security
-│   ├── web_scraper.py          ← Module 2 (Level 2.1) — Playwright async DOM extraction
-│   └── code_repl.py            ← Module 2 (Level 2.2) — PythonREPL sandboxed tool
-│
-├── agents/
-│   ├── supervisor.py           ← Module 3 (Level 3.2) — LangGraph routing logic
-│   └── workers.py              ← Module 3 (Level 3.2) — web_scraper_node, rag_auditor_node
-│
-├── ingest.py                   ← Module 1 (Level 1.1 + 1.2) — RUN ONCE to embed PDFs to chroma_db
-└── main.py                     ← Module 3 (Level 3.2) — Graph compile + app.invoke() entry point
-
-📌 EXECUTION ORDER:
-   Step 1 → uv pip install -r requirements.txt
-   Step 2 → playwright install
-   Step 3 → Fill .env keys
-   Step 4 → python ingest.py          (Module 1 — run ONCE)
-   Step 5 → python main.py            (Module 3 — live agent)
+﻿
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -86,6 +48,11 @@ Yeh tool company ka Code Review time 80% tak reduce karega, [Technical Debt] (kh
 - 📁 **FILE:** `ingest.py` — yeh level ka saara code is file mein likhna hai
 - 🔗 **Project Fit:** Yeh level teri Data Pipeline ka pehla step hai. Bina unstructured data ko saaf kiye, tera LLM anpadh rahega.
 
+> 📎 **GAP FIX — PyPDFLoader import source (never mentioned in this level):**
+> `PyPDFLoader` comes from `langchain_community.document_loaders` — NOT from `langchain` directly.
+> Your import line: `from langchain_community.document_loaders import PyPDFLoader`
+> Package providing this: `langchain-community` (already in requirements.txt, no extra install needed).
+
 ---
 
 ### 1. ⚡ The Concept (Ultra-Short)
@@ -108,6 +75,12 @@ Unstructured PDFs ko load karke unhe explicitly `[RecursiveCharacterTextSplitter
 - ❓ **The Logic (Kyun):** Arrays ko flat rakhna zaroori hai taaki aage chunker list-of-lists pe crash na ho.
 - 💡 **Real-World Learning:** Handling raw binary data pipelines.
 - ✅ **Definition of Done (DoD):** Total extracted pages ka count terminal pe print hona chahiye.
+
+> 📎 **GAP FIX — PDF paths & Source Metadata (Level 2.2 is this referencing):**
+> Use RELATIVE paths: `"./knowledge_base_pdf/html_cheatsheet.pdf"` etc.
+> `PyPDFLoader` AUTOMATICALLY adds the file path as `source` in each Document's metadata. You don't add it manually.
+> This `source` key (e.g. `"./knowledge_base_pdf/html_cheatsheet.pdf"`) is what Level 2.2 calls "Domain Metadata" —
+> you will later filter ChromaDB results by this path to separate HTML vs JS vs SQL rules.
 
 **Step 2: Semantic Sizing (The Pizza Slicer)**
 - 📁 **FILE:** `ingest.py` (same file, continue)
@@ -141,6 +114,11 @@ Verification: First chunk length is 980 characters.
 Metadata: {'source': './testing_and_evaluation_llm.pdf', 'page': 0, 'start_index': 0}
 ```
 
+> 📎 **GAP FIX — Wrong filename in Expected Output:**
+> The filename `testing_and_evaluation_llm.pdf` above is from a DIFFERENT course demo. It is WRONG for this project.
+> Your actual output will show: `{'source': './knowledge_base_pdf/html_cheatsheet.pdf', 'page': 0, 'start_index': 0}`
+> (or whichever PDF is first in your loop). Do NOT panic if your output doesn't match — the structure is what matters.
+
 💬 **Self-Verify Questions:**
 > 💬 **Quick Verify 1:** `extend()` aur `append()` mein kya fark hai PDF loading ke time?
 > 💬 **Quick Verify 2:** Tokens aur characters limit mein kya confusion hoti hai beginners ko?
@@ -164,6 +142,17 @@ Metadata: {'source': './testing_and_evaluation_llm.pdf', 'page': 0, 'start_index
 - **Previous Levels Required:** Level 1.1 ke chunks variable mein loaded hone chahiye.
 - 📁 **FILE:** `ingest.py` (same file, continue from Level 1.1)
 - 🔗 **Project Fit:** Ab un chunks ko hum math ke arrays mein badlenge aur hard-disk pe hamesha ke liye freeze (persist) kar denge taaki agent milliseconds mein search kar sake.
+
+> 📎 **GAP FIX — OllamaEmbeddings import source + missing package:**
+> `OllamaEmbeddings` has TWO valid import paths — pick ONE and be CONSISTENT across ALL files:
+>   Option A (older):  `from langchain_community.embeddings import OllamaEmbeddings`
+>   Option B (newer, preferred): `from langchain_ollama import OllamaEmbeddings`
+> ⚠️ Option B needs `langchain-ollama` package — it is NOT in requirements.txt yet. Add it and re-run install.
+> ⚠️ CRITICAL: Whichever you pick in `ingest.py`, use the EXACT SAME import in `tools/rag_retriever.py` later.
+>   Mixing the two import paths causes a Dimension Mismatch error at runtime.
+>
+> ⚠️ `Ollama running in background` means: open a SEPARATE terminal → run `ollama serve` → keep it open.
+>   If you close that terminal, ALL embedding and LLM calls will throw `ConnectionError`.
 
 ---
 
@@ -211,6 +200,11 @@ Text ko `[High-dimensional mathematical vectors]` (embeddings) mein convert kark
 #### 🕵️ CHALLENGE 3 — UNDER THE HOOD VERIFICATION (Deep Dive)
 Apne file explorer mein ja aur dekh kya `./chroma_db` folder aur uske andar `chroma.sqlite3` file actually ban chuki hai? Phir ek kaam kar: apni `.gitignore` file khol aur usme `chroma_db/` add kar. (Security 101: Never push heavy DBs to GitHub).
 
+> 📎 **GAP FIX — .gitignore is ALREADY CORRECT, don't change it:**
+> Your `.gitignore` already has the correct entry: `database/chroma_db/`
+> This is MORE precise than the `chroma_db/` shorthand mentioned above. Do NOT change it.
+> Verify by checking: `database/chroma_db/chroma.sqlite3` exists after running `ingest.py`.
+
 ---
 
 ### 5. ✅ Definition of Done ("Kaise pata chalega ki sahi hua?")
@@ -231,6 +225,13 @@ Content: Bias testing involves evaluating...
 ### 6. 🧠 Practical Takeaway (Asli Siksha)
 - Tune **Disk Serialization** seekh li. Ek baar embedding lagane ke baad, tu us database ko infinitely load kar sakta hai 0 compute cost pe (`[Load Game]` analogy).
 - ⚠️ **Anti-Pattern:** In-memory DBs use karna production mein, ya alag-alag embedding models mix kar dena (jisse `[Dimension Mismatch]` error aayega). Hamesha extraction aur retrieval dono side SAME embedding model use kar.
+
+> 📎 **GAP FIX — CREATE vs LOAD ChromaDB (critical for Level 2.2 later):**
+> In this level you used `Chroma.from_documents(chunks, embedding, ...)` — this CREATES the DB.
+> In `tools/rag_retriever.py` (Level 2.2) you need to LOAD the existing DB — different call:
+>   Creating → `Chroma.from_documents(...)` — only in ingest.py, run once
+>   Loading  → `Chroma(persist_directory=..., embedding_function=...)` — in rag_retriever.py
+> Challenge 1 above (crash without embedding_function) is teaching you exactly this distinction.
 
 > 🧠 **Memory Hook:** "Vector store woh Smart Almirah hai jahan kitabein naam se nahi, unke andar likhe 'Meaning' (Vectors) se dhoondhi jaati hain. Aur Chroma mein Score Golf jaisa hota hai — lowest is the best!"
 
@@ -426,6 +427,12 @@ The more explicit the code, the easier it is to maintain. Boilerplate code likhn
 - 📁 **FILE:** `tools/web_scraper.py` — yeh level ka saara code is file mein likhna hai
 - 🔗 **Project Fit:** Yeh tool tere agent ko kisi bhi live staging link ya GitHub PR page par bhej kar `[Dynamic content]` padhne ki power dega.
 
+> 📎 **GAP FIX — Playwright import sources (never stated in this level):**
+> These two are NOT auto-imported — you must know where they come from:
+>   `PlaywrightWebBrowserToolkit` → `from langchain_community.agent_toolkits import PlaywrightWebBrowserToolkit`
+>   `create_async_playwright_browser` → `from langchain_community.tools.playwright.utils import create_async_playwright_browser`
+> Both come from `langchain-community` (already in requirements.txt).
+
 ---
 
 ### 1. ⚡ The Concept (Ultra-Short)
@@ -453,10 +460,31 @@ Agent ko ek `[Headless Browser]` (bina UI ka invisible browser engine) dena taak
 - ⚡ **The Task (What):** `create_async_playwright_browser` function se ek background browser start kar aur usko `PlaywrightWebBrowserToolkit` ke `from_browser()` method mein bind karke saare tools extract kar (`toolkit.get_tools()`).
 - ❓ **The Logic (Kyun):** Toolkit ek "Astra ka baksa" hai jisme navigate, click, aur extract karne ke tools hote hain.
 
+> 📎 **GAP FIX — `create_async_playwright_browser` is ASYNC (not a regular function call):**
+> This function returns a coroutine — you CANNOT call it like a normal function.
+> Since `nest_asyncio.apply()` is called at the top, wrap it like this:
+>   `async_browser = asyncio.get_event_loop().run_until_complete(create_async_playwright_browser())`
+> This produces the actual browser object you pass to `PlaywrightWebBrowserToolkit.from_browser(async_browser)`.
+
 **Step 3: Tool Extraction & Conditional Filtering**
 - 📁 **FILE:** `tools/web_scraper.py` (continue)
 - ⚡ **The Task (What):** Saare 7 tools agent ko mat de (Varna `[Tool Bloat]` hoga aur context window phat jayegi). Ek `for` loop chala aur sirf us tool ko nikal jiska `name` attribute exactly `"navigate_browser"` ya `"get_elements"` ho. Inko apne naye variables mein save kar.
 - ❓ **The Logic (Kyun):** `[Principle of Least Privilege]` — Agent ko utni hi power do jitni PR audit karne ke liye zaroori hai. Usey internet pe random buttons click (`click_element`) karne ki power mat do warna `[Confused Deputy Attack]` ho sakta hai.
+
+> 📎 **GAP FIX — Full list of 7 Playwright tools (so you know what you're filtering OUT):**
+>   navigate_browser   → Go to a URL           ✔ KEEP THIS
+>   get_elements       → Extract DOM elements   ✔ KEEP THIS
+>   click_element      → Click on page element  ✘ EXCLUDE (security risk — Confused Deputy Attack)
+>   fill_element       → Type into a form field ✘ EXCLUDE
+>   get_current_page   → Return current URL     ✘ EXCLUDE
+>   previous_page      → Browser back button    ✘ EXCLUDE
+>   extract_text       → All visible text       ✘ EXCLUDE
+>
+> 📎 **GAP FIX — Variable names you MUST use (Level 2.3 uses these exact names):**
+> When saving the two filtered tools, use these exact variable names:
+>   `navigate_tool`     → the tool whose `.name == "navigate_browser"`
+>   `get_element_tool`  → the tool whose `.name == "get_elements"`
+> Level 2.3 Step 1 uses `navigate_tool` and `get_element_tool` in `master_tools` without re-explaining where they came from — they come from HERE.
 
 ---
 
@@ -526,6 +554,11 @@ LLM ko ek Python shell (`[REPL]`) ka access dena taaki woh calculations aur scri
 - ❓ **The Logic (Kyun):** Yeh utility external string ko as a Python command evaluate karti hai.
 - 💡 **Real-World Learning:** `func=python_repl.run` assign karna mat bhoolna. Docstring mein strictly likh: *"A Python shell. Use this to execute python commands for math and array logic."*
 
+> 📎 **GAP FIX — Variable name `repl_tool` (Level 2.3 uses it without explanation):**
+> Name your final Tool object exactly `repl_tool`.
+> Level 2.3 Step 1 builds `master_tools = [..., repl_tool]` without saying where this name came from — it comes from HERE.
+> So: `repl_tool = Tool(name="python_repl", func=python_repl.run, description="...")`
+
 **Step 2: Retrievers as Tools (The Knowledge Injectors)**
 - 📁 **FILE:** `tools/rag_retriever.py`
 - ⚡ **The Task (What):** Apne Level 1.2 wale Vector DB ko 3 alag-alag tools mein wrap kar `@tool` decorator ka use karke. Har tool ke andar DB par `.invoke(query)` chala.
@@ -534,6 +567,15 @@ LLM ko ek Python shell (`[REPL]`) ka access dena taaki woh calculations aur scri
   - Tool 3: `check_sql_security`
 - ❓ **The Logic (Kyun):** Humne DB banate waqt `[Domain Metadata]` inject kiya tha. Ab un filters ka use kar taaki LLM ko clearly teen alag "departments" mil sakein.
 - ✅ **Definition of Done (DoD):** Teeno custom functions strict `[Type hints]` (`query: str`) aur `[MECE]` (Mutually Exclusive, Completely Exhaustive) docstrings ke sath tayyar hain.
+
+> 📎 **GAP FIX — How to actually USE the Domain Metadata filter in this file:**
+> Level 1.1 PyPDFLoader automatically set `source` = the PDF file path in each Document's metadata.
+> In each of your 3 `@tool` functions, load ChromaDB with LOAD syntax (not `from_documents`), then pass a filter:
+>   `check_html_syntax` → filter where `source` contains `"html_cheatsheet"`
+>   `check_js_logic`    → filter where `source` contains `"javascript_cheatsheet"`
+>   `check_sql_security`→ filter where `source` contains `"mysql_cheatsheet"`
+> Chroma filter syntax uses a dict: `{"source": {"$contains": "html_cheatsheet"}}`
+> Look up: Chroma metadata filtering docs for the exact operator syntax.
 
 ---
 
@@ -575,6 +617,11 @@ Custom RAG Tools registered successfully.
 - 📁 **FILE:** Create `test_tool_binding.py` (test file to verify tool binding works)
 - 🔗 **Project Fit:** Ab tak tools isolated the. Is level mein hum in saare tools ka "Menu Card" banayenge aur usko LLM ke dimaag ke sath permanently weld (bind) kar denge.
 
+> 📎 **GAP FIX — test_tool_binding.py vs main.py (which file does what):**
+> `test_tool_binding.py` is ONLY for verification. The PRODUCTION version of the same logic lives in `main.py`.
+> In `main.py` you will: import all tools → build `master_tools` list → build `tool_registry` dict → create `llm_with_tools` via `bind_tools` → pass `llm_with_tools` into agent nodes.
+> Do NOT treat the test file as the final location of this code.
+
 ---
 
 ### 1. ⚡ The Concept (Ultra-Short)
@@ -601,6 +648,11 @@ Apne Python functions ko automatically `[JSON Schemas]` mein convert karke LLM k
 **Step 3: Schema Conversion & The Handshake**
 - ⚡ **The Task (What):** Apne initialized LLM par `llm.bind_tools(master_tools)` call kar aur usko ek naye variable `llm_with_tools` mein save kar.
 - ❓ **The Logic (Kyun):** Yeh function tere Python code se Pydantic models extract karta hai, OpenAI/Ollama Tool Calling Schema banata hai, aur LLM ko internally sikha deta hai.
+
+> 📎 **GAP FIX — Where does the LLM object come from? (never stated in this level):**
+> The LLM (`ChatOllama` instance) is initialized in `core/config.py` OR at the top of `main.py` — NOT inside any tool file.
+> Pattern: `core/config.py` defines `OLLAMA_MODEL` constant → `main.py` creates `ChatOllama(model=OLLAMA_MODEL)` → then binds tools.
+> `ChatOllama` import: `from langchain_ollama import ChatOllama` (preferred) or `from langchain_community.chat_models import ChatOllama`.
 
 ---
 
@@ -814,6 +866,13 @@ Ab hum is factory ko poora karenge. Is module mein hum ek "Supervisor" bithayeng
 - 📁 **FILE:** Create `test_execution_gap.py` (test file to understand the concept)
 - 🔗 **Project Fit:** Yeh level teri pipeline mein LLM ke "Order Ticket" ko asli Python execution mein badlega aur data ko wapas LLM ko pass karega for final synthesis.
 
+> 📎 **GAP FIX — Level 3.1 is NOT a throw-away exercise. It directly maps to workers.py:**
+> The exact pattern you learn here (for loop over `tool_calls` → invoke tool → wrap in `ToolMessage` with matching `tool_call_id`) is what you implement INSIDE each node function in `agents/workers.py`.
+> Specifically:
+>   `web_scraper_node(state)` → calls navigate_tool + get_element_tool using this loop
+>   `rag_auditor_node(state)` → calls llm_with_tools, then runs this loop for RAG tools
+> `test_execution_gap.py` teaches the concept → `workers.py` is the production implementation.
+
 ---
 
 ### 1. ⚡ The Concept (Ultra-Short)
@@ -910,11 +969,31 @@ Multi-Agent Orchestration mein ek Supervisor (dimaag) user query ko parse karta 
 - ⚡ **The Task (What):** Teen functions bana: `supervisor_node(state)`, `web_scraper_node(state)`, aur `rag_auditor_node(state)`. Supervisor ke LLM prompt mein likh: *"Review messages. Decide if we need to SCRAPE the PR, AUDIT the code, or FINISH."*
 - ❓ **The Logic (Kyun):** Supervisor khud koi tool execute nahi karega. Uska kaam sirf `next_agent` variable ki value set karna hai. Worker nodes actually Playwright aur RAG run karenge.
 
+> 📎 **GAP FIX — Exact routing strings (must be IDENTICAL in supervisor.py AND main.py):**
+> Supervisor must output ONE of these exact string values into `state["next_agent"]`:
+>   `"web_scraper"`  → routes to web_scraper_node
+>   `"rag_auditor"`  → routes to rag_auditor_node
+>   `"FINISH"`       → maps to END (imported from langgraph.graph)
+> The keys in `add_conditional_edges` mapping dict in `main.py` MUST match these strings exactly.
+> If supervisor outputs `"WEB_SCRAPER"` but the dict has `"web_scraper"` — routing crashes. Case matters.
+
 **Step 3: The Network (Nodes & Edges)**
 - 📁 **FILE:** `main.py`
 - ⚡ **The Task (What):** `StateGraph(AgentState)` initialize kar. Teeno nodes ko `add_node` se attach kar. Phir `add_conditional_edges` use kar `Supervisor` par, jo `state["next_agent"]` ke hisaab se traffic worker ko bheje.
 - 💡 **Real-World Learning:** `[Conditional Routing]` is the secret sauce of autonomous systems.
 - ✅ **Definition of Done (DoD):** Graph properly `compile()` ho gaya hai bina kisi syntax error ke.
+
+> 📎 **GAP FIX — Missing graph ENTRY POINT (graph compiles but crashes on invoke without this):**
+> After adding nodes and conditional edges, you MUST also add:
+>   `graph.add_edge(START, "supervisor")`
+> `START` is a special constant: `from langgraph.graph import StateGraph, END, START`
+> Without this line, LangGraph does not know where to begin — it will compile but throw an error on `.invoke()`.
+>
+> 📎 **GAP FIX — What code goes INSIDE each worker node function:**
+> Both worker nodes use the Level 3.1 execution gap loop internally:
+>   `web_scraper_node(state)` → get latest message → call navigate_tool + get_element_tool → wrap results in ToolMessage → return `{"messages": [ToolMessage(...)]}`
+>   `rag_auditor_node(state)` → get latest message → invoke llm_with_tools to get tool_calls for RAG tools → run the execution gap loop → return `{"messages": [ToolMessage(...)]}`
+> The Level 3.1 for-loop bridge IS the core logic inside each node.
 
 ---
 
