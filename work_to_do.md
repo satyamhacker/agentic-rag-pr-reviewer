@@ -32,7 +32,7 @@ agentic-rag-pr-reviewer/
 └── main.py                     ← Module 3 (Level 3.2) — Graph compile + app.invoke() entry point
 
 📌 EXECUTION ORDER:
-   Step 1 → pip install -r requirements.txt
+   Step 1 → uv pip install -r requirements.txt
    Step 2 → playwright install
    Step 3 → Fill .env keys
    Step 4 → python ingest.py          (Module 1 — run ONCE)
@@ -82,7 +82,8 @@ Yeh tool company ka Code Review time 80% tak reduce karega, [Technical Debt] (kh
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 0. 📌 Prerequisites (Before You Start This Level)
-- **Tools/Environment Required:** Python 3.10+, `langchain_community`, `pypdf` installed. Apne paas ek dummy `testing_and_evaluation_llm.pdf` rakh le.
+- **Tools/Environment Required:** Python 3.10+, `uv pip install langchain_community pypdf` run kar.
+- 📁 **FILE:** `ingest.py` — yeh level ka saara code is file mein likhna hai
 - 🔗 **Project Fit:** Yeh level teri Data Pipeline ka pehla step hai. Bina unstructured data ko saaf kiye, tera LLM anpadh rahega.
 
 ---
@@ -102,12 +103,14 @@ Unstructured PDFs ko load karke unhe explicitly `[RecursiveCharacterTextSplitter
 ### 3. 🎯 The Mission — Step-by-Step Practical Tasks
 
 **Step 1: Programmatic Extraction Loop**
+- 📁 **FILE:** `ingest.py`
 - ⚡ **The Task (What):** Ek list bana jisme teri PDF ka relative path ho. Ek loop chala kar `[PyPDFLoader]` initialize kar aur extracted pages ko ek master `documents` array mein daal. (Hint: Nested list se bachne ke liye `append` use mat karna, doosra function dhoondh).
 - ❓ **The Logic (Kyun):** Arrays ko flat rakhna zaroori hai taaki aage chunker list-of-lists pe crash na ho.
 - 💡 **Real-World Learning:** Handling raw binary data pipelines.
 - ✅ **Definition of Done (DoD):** Total extracted pages ka count terminal pe print hona chahiye.
 
 **Step 2: Semantic Sizing (The Pizza Slicer)**
+- 📁 **FILE:** `ingest.py` (same file, continue)
 - ⚡ **The Task (What):** `[RecursiveCharacterTextSplitter] (hierarchical splitting engine)` ko configure kar. `chunk_size` ko 1000 aur `chunk_overlap` ko 200 rakh. `add_start_index=True` zaroor on rakhna. Phir master array ko explicitly `split_documents()` method mein pass kar.
 - ❓ **The Logic (Kyun):** Recursive splitter pehle paragraphs (`\n\n`), phir lines (`\n`) pe todta hai. Overlap ensure karta hai ki flow na toote.
 - 💡 **Real-World Learning:** `[Metadata Traceability]` banti hai jisse aage UI pe citations highlight hote hain.
@@ -157,8 +160,9 @@ Metadata: {'source': './testing_and_evaluation_llm.pdf', 'page': 0, 'start_index
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 0. 📌 Prerequisites (Before You Start This Level)
-- **Tools/Environment Required:** Terminal mein `pip install langchain-chroma chromadb` run kar. `Ollama` running in background.
+- **Tools/Environment Required:** Terminal mein `uv pip install langchain-chroma chromadb` run kar. `Ollama` running in background.
 - **Previous Levels Required:** Level 1.1 ke chunks variable mein loaded hone chahiye.
+- 📁 **FILE:** `ingest.py` (same file, continue from Level 1.1)
 - 🔗 **Project Fit:** Ab un chunks ko hum math ke arrays mein badlenge aur hard-disk pe hamesha ke liye freeze (persist) kar denge taaki agent milliseconds mein search kar sake.
 
 ---
@@ -177,15 +181,18 @@ Text ko `[High-dimensional mathematical vectors]` (embeddings) mein convert kark
 ### 3. 🎯 The Mission — Step-by-Step Practical Tasks
 
 **Step 1: The Translator (Embedding Setup)**
+- 📁 **FILE:** `ingest.py` (continue in same file)
 - ⚡ **The Task (What):** `[OllamaEmbeddings]` ko import kar aur usme `model="llama3.2"` load kar.
 - ❓ **The Logic (Kyun):** Yeh tera engine hai jo english words ko AI ke `[GPS Coordinates] (Vectors)` mein badlega.
 
 **Step 2: Database Persistence & Bootstrapping**
+- 📁 **FILE:** `ingest.py` (continue)
 - ⚡ **The Task (What):** `Chroma.from_documents` factory method use kar. Usme apne chunks, apna embedding model, `collection_name="rag_app"`, aur `persist_directory="./database/chroma_db"` strictly pass kar. 
 - ❓ **The Logic (Kyun):** Yeh function tere chunks ko vectors mein convert karke `[HNSW] (graph indexing algorithm)` ke roop mein disk par ek SQLite file mein lock kar dega.
 - 💡 **Real-World Learning:** Yeh tera `[Idempotency]` (ek baar chalo aur bhool jao) ka foundation hai.
 
 **Step 3: The Sniper Search (Similarity Query)**
+- 📁 **FILE:** `ingest.py` (continue — optional test code)
 - ⚡ **The Task (What):** Ab apne database instance pe `similarity_search_with_score` method chala. Query de: *"What is bias testing?"*. `k=2` set kar. 
 - ❓ **The Logic (Kyun):** Agent ko database sikhane se pehle, humein manually verify karna hoga ki math theek se kaam kar raha hai ya nahi.
 
@@ -284,6 +291,8 @@ Tools/Environment Required: Tera Level 1.2 ka persist kiya hua [ChromaDB] ready 
 
 Assumed Knowledge: Embeddings kaise kaam karti hain.
 
+📁 **FILE:** Create a new test file `test_reranking.py` (optional — for learning only)
+
 🔗 Project Fit: Yeh tere RAG system ka "Kachra Filter" hai.
 
 1. ⚡ The Concept (Ultra-Short)
@@ -296,6 +305,8 @@ Vector DB bewakoof hai, woh top 5 results dega hi dega chahe woh completely irre
 
 3. 🎯 The Mission — Step-by-Step Practical Tasks
 Step 1: The Smart Filter (EmbeddingsFilter)
+
+📁 **FILE:** `test_reranking.py` (optional test file)
 
 ⚡ The Task (What): [EmbeddingsFilter] (chunks ko explicitly score and filter karne wala class) initialize kar. Isme apna local [OllamaEmbeddings] pass kar aur similarity_threshold=0.76 set kar.
 
@@ -342,6 +353,8 @@ Vector DB ka k=5 blind hota hai. Reranking (Compression) us k=5 mein se garbage 
 
 0. 📌 Prerequisites (Before You Start This Level)
 Tools/Environment Required: LangChain core prompts aur LCEL | operator ka basic idea.
+
+📁 **FILE:** Create `test_lcel.py` (optional test file for learning)
 
 🔗 Project Fit: Pre-built chains "Black Box" hoti hain. Ab hum manually prompts link karenge taaki [Data Sanitization] apne haath mein rahe.
 
@@ -408,8 +421,9 @@ The more explicit the code, the easier it is to maintain. Boilerplate code likhn
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 0. 📌 Prerequisites (Before You Start This Level)
-- **Tools/Environment Required:** Terminal mein `pip install playwright nest_asyncio` aur `playwright install` chalaya hua hona chahiye.
+- **Tools/Environment Required:** Terminal mein `uv pip install playwright nest_asyncio` aur `playwright install` chalaya hua hona chahiye.
 - **Assumed Knowledge:** Async programming in Python (`await`, coroutines).
+- 📁 **FILE:** `tools/web_scraper.py` — yeh level ka saara code is file mein likhna hai
 - 🔗 **Project Fit:** Yeh tool tere agent ko kisi bhi live staging link ya GitHub PR page par bhej kar `[Dynamic content]` padhne ki power dega.
 
 ---
@@ -428,16 +442,19 @@ Agent ko ek `[Headless Browser]` (bina UI ka invisible browser engine) dena taak
 ### 3. 🎯 The Mission — Step-by-Step Practical Tasks
 
 **Step 1: The Async Injection (Jupyter/REPL Survival)**
+- 📁 **FILE:** `tools/web_scraper.py`
 - ⚡ **The Task (What):** Apni script ke top par `nest_asyncio` module import kar aur uska `apply()` method call kar.
 - ❓ **The Logic (Kyun):** Jupyter aur Playwright dono apna apna `[Event Loop]` (async task manager) chalate hain. Yeh injection dono ko takrane (`RuntimeError`) se rokti hai.
 - 💡 **Real-World Learning:** Managing async contexts in complex data science environments.
 - ✅ **Definition of Done (DoD):** Code bina "This event loop is already running" error ke chalna chahiye.
 
 **Step 2: Starting the Invisible Engine**
+- 📁 **FILE:** `tools/web_scraper.py` (continue)
 - ⚡ **The Task (What):** `create_async_playwright_browser` function se ek background browser start kar aur usko `PlaywrightWebBrowserToolkit` ke `from_browser()` method mein bind karke saare tools extract kar (`toolkit.get_tools()`).
 - ❓ **The Logic (Kyun):** Toolkit ek "Astra ka baksa" hai jisme navigate, click, aur extract karne ke tools hote hain.
 
 **Step 3: Tool Extraction & Conditional Filtering**
+- 📁 **FILE:** `tools/web_scraper.py` (continue)
 - ⚡ **The Task (What):** Saare 7 tools agent ko mat de (Varna `[Tool Bloat]` hoga aur context window phat jayegi). Ek `for` loop chala aur sirf us tool ko nikal jiska `name` attribute exactly `"navigate_browser"` ya `"get_elements"` ho. Inko apne naye variables mein save kar.
 - ❓ **The Logic (Kyun):** `[Principle of Least Privilege]` — Agent ko utni hi power do jitni PR audit karne ke liye zaroori hai. Usey internet pe random buttons click (`click_element`) karne ki power mat do warna `[Confused Deputy Attack]` ho sakta hai.
 
@@ -484,7 +501,8 @@ Extracted Data: [{"innerText": "const x = async () => {...}"}]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 0. 📌 Prerequisites (Before You Start This Level)
-- **Tools/Environment Required:** `langchain_experimental` installed. Level 1.2 ka vector DB instance loaded.
+- **Tools/Environment Required:** `uv pip install langchain_experimental` run kar. Level 1.2 ka vector DB instance loaded.
+- 📁 **FILES:** `tools/code_repl.py` aur `tools/rag_retriever.py` — dono files mein code likhna hai
 - 🔗 **Project Fit:** Code auditing mein humein exact bundle size, logic execution time, ya strict array manipulation metrics nikalne padte hain. LLMs math aur logic compute karne mein ghatiya hain, isliye yeh tool zaroori hai.
 
 ---
@@ -503,11 +521,13 @@ LLM ko ek Python shell (`[REPL]`) ka access dena taaki woh calculations aur scri
 ### 3. 🎯 The Mission — Step-by-Step Practical Tasks
 
 **Step 1: The Code Interpreter Integration**
+- 📁 **FILE:** `tools/code_repl.py`
 - ⚡ **The Task (What):** `langchain_experimental.utilities` se `PythonREPL` import kar. Iska ek instance bana. Phir `Tool` class (from `langchain_core.tools`) ka use karke is REPL ko ek LLM-readable tool mein convert kar. 
 - ❓ **The Logic (Kyun):** Yeh utility external string ko as a Python command evaluate karti hai.
 - 💡 **Real-World Learning:** `func=python_repl.run` assign karna mat bhoolna. Docstring mein strictly likh: *"A Python shell. Use this to execute python commands for math and array logic."*
 
 **Step 2: Retrievers as Tools (The Knowledge Injectors)**
+- 📁 **FILE:** `tools/rag_retriever.py`
 - ⚡ **The Task (What):** Apne Level 1.2 wale Vector DB ko 3 alag-alag tools mein wrap kar `@tool` decorator ka use karke. Har tool ke andar DB par `.invoke(query)` chala.
   - Tool 1: `check_html_syntax`
   - Tool 2: `check_js_logic`
@@ -552,6 +572,7 @@ Custom RAG Tools registered successfully.
 
 ### 0. 📌 Prerequisites (Before You Start This Level)
 - **Tools/Environment Required:** Local `ChatOllama` initialized with a model that has Native Tooling Support (e.g., `llama3.2` or `qwen2.5`).
+- 📁 **FILE:** Create `test_tool_binding.py` (test file to verify tool binding works)
 - 🔗 **Project Fit:** Ab tak tools isolated the. Is level mein hum in saare tools ka "Menu Card" banayenge aur usko LLM ke dimaag ke sath permanently weld (bind) kar denge.
 
 ---
@@ -633,7 +654,9 @@ Generated Tool Calls: [{'name': 'python_repl', 'args': {...}}, {'name': 'check_s
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 0. 📌 Prerequisites (Before You Start This Level)
-Tools/Environment Required: pip install smolagents.
+Tools/Environment Required: uv pip install smolagents.
+
+📁 **FILE:** Create `test_smolagents.py` (optional test file)
 
 🔗 Project Fit: Tera agent ab sirf tool call nahi karega, woh actually Python code generate karke safe sandbox mein execute karega.
 
@@ -683,7 +706,9 @@ Dynamic Execution: LLM ke paas logic building aati hai. CodeAgent us logic ko di
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 0. 📌 Prerequisites (Before You Start This Level)
-Tools/Environment Required: pip install duckduckgo-search langchainhub.
+Tools/Environment Required: uv pip install duckduckgo-search langchainhub.
+
+📁 **FILE:** Create `test_search_hub.py` (optional test file)
 
 🔗 Project Fit: Tere agent ko latest syntax/bugs fetch karne ke liye internet chahiye, aur fail-safe pipelines chahiye.
 
@@ -786,6 +811,7 @@ Ab hum is factory ko poora karenge. Is module mein hum ek "Supervisor" bithayeng
 ### 0. 📌 Prerequisites (Before You Start This Level)
 - **Tools/Environment Required:** `langchain_core.messages` module ki basic samajh.
 - **Previous Levels Required:** Level 2.3 ka `llm_with_tools` aur `tool_calls` output ready chahiye.
+- 📁 **FILE:** Create `test_execution_gap.py` (test file to understand the concept)
 - 🔗 **Project Fit:** Yeh level teri pipeline mein LLM ke "Order Ticket" ko asli Python execution mein badlega aur data ko wapas LLM ko pass karega for final synthesis.
 
 ---
@@ -855,7 +881,8 @@ Apne `ai_message` object ko console mein print kar aur dhyan se dekh ki `respons
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 0. 📌 Prerequisites (Before You Start This Level)
-- **Tools/Environment Required:** `pip install langgraph langsmith`. LangSmith API keys `.env` mein set honi chahiye (`LANGCHAIN_TRACING_V2=true`).
+- **Tools/Environment Required:** `uv pip install langgraph langsmith`. LangSmith API keys `.env` mein set honi chahiye (`LANGCHAIN_TRACING_V2=true`).
+- 📁 **FILES:** `agents/supervisor.py`, `agents/workers.py`, `main.py` — teen files mein code distribute hoga
 - 🔗 **Project Fit:** Ab tak tu ek hi thread mein manually loop laga raha tha. Ab hum `[LangGraph]` use karke ek aisi factory design karenge jo automatically traffic route karegi aur scale hogi!
 
 ---
@@ -874,14 +901,17 @@ Multi-Agent Orchestration mein ek Supervisor (dimaag) user query ko parse karta 
 ### 3. 🎯 The Mission — Step-by-Step Practical Tasks
 
 **Step 1: The Memory Board (AgentState)**
+- 📁 **FILE:** `core/state.py` (already created, verify it matches)
 - ⚡ **The Task (What):** Ek `AgentState` class bana jo `TypedDict` se inherit kare. Isme strictly yeh property rakh: `messages: Annotated[Sequence[BaseMessage], operator.add]`. Aur ek routing field: `next_agent: str`.
 - ❓ **The Logic (Kyun):** Yeh graph ki shared memory hai. `[operator.add]` ensure karega ki jab bhi naya agent data daale, toh list append ho, pichla data overwrite na ho (State Preservation).
 
 **Step 2: Defining the Workers & Supervisor**
+- 📁 **FILES:** `agents/supervisor.py` aur `agents/workers.py`
 - ⚡ **The Task (What):** Teen functions bana: `supervisor_node(state)`, `web_scraper_node(state)`, aur `rag_auditor_node(state)`. Supervisor ke LLM prompt mein likh: *"Review messages. Decide if we need to SCRAPE the PR, AUDIT the code, or FINISH."*
 - ❓ **The Logic (Kyun):** Supervisor khud koi tool execute nahi karega. Uska kaam sirf `next_agent` variable ki value set karna hai. Worker nodes actually Playwright aur RAG run karenge.
 
 **Step 3: The Network (Nodes & Edges)**
+- 📁 **FILE:** `main.py`
 - ⚡ **The Task (What):** `StateGraph(AgentState)` initialize kar. Teeno nodes ko `add_node` se attach kar. Phir `add_conditional_edges` use kar `Supervisor` par, jo `state["next_agent"]` ke hisaab se traffic worker ko bheje.
 - 💡 **Real-World Learning:** `[Conditional Routing]` is the secret sauce of autonomous systems.
 - ✅ **Definition of Done (DoD):** Graph properly `compile()` ho gaya hai bina kisi syntax error ke.
