@@ -171,7 +171,7 @@ Text ko `[High-dimensional mathematical vectors]` (embeddings) mein convert kark
 
 **Step 1: The Translator (Embedding Setup)**
 - 📁 **FILE:** `ingest.py` (continue in same file)
-- ⚡ **The Task (What):** `[OllamaEmbeddings]` ko import kar aur usme `model="llama3.2"` load kar.
+- ⚡ **The Task (What):** `[OllamaEmbeddings]` ko import kar aur usme `model="mistral:7b"` load kar.
 - ❓ **The Logic (Kyun):** Yeh tera engine hai jo english words ko AI ke `[GPS Coordinates] (Vectors)` mein badlega.
 
 **Step 2: Database Persistence & Bootstrapping**
@@ -613,7 +613,7 @@ Custom RAG Tools registered successfully.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 0. 📌 Prerequisites (Before You Start This Level)
-- **Tools/Environment Required:** Local `ChatOllama` initialized with a model that has Native Tooling Support (e.g., `llama3.2` or `qwen2.5`).
+- **Tools/Environment Required:** Local `ChatOllama` initialized with a model that has Native Tooling Support (e.g., `mistral:7b` or `qwen2.5`).
 - 📁 **FILE:** Create `test_tool_binding.py` (test file to verify tool binding works)
 - 🔗 **Project Fit:** Ab tak tools isolated the. Is level mein hum in saare tools ka "Menu Card" banayenge aur usko LLM ke dimaag ke sath permanently weld (bind) kar denge.
 
