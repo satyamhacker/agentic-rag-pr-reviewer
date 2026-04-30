@@ -46,12 +46,13 @@ def load_and_split_documents():
     print(f"\nTotal documents extracted: {len(documents)}")
     
     if documents:
-        print(f"First document preview: {documents[0].page_content[:200]}...")
+        print(f"First document preview: {documents[0].page_content[:2000]}...")
     
     return documents
 
 
-def embed_documents(documents):
+
+def embed_and_store_documents(documents):
     """Create embeddings and store them in ChromaDB."""
     if not documents:
         print("No documents to embed.")
@@ -86,17 +87,5 @@ def embed_documents(documents):
     print(f"Documents embedded and stored in {CHROMA_PERSIST_DIR}")
 
 
-def main():
-    """Main function to run the ingestion pipeline."""
-    # Create the PDF source directory if it doesn't exist
-    os.makedirs(PDF_SOURCE_DIR, exist_ok=True)
-    
-    # Load and split documents
-    documents = load_and_split_documents()
-    
-    # Embed documents if any were loaded
-    embed_documents(documents)
-
-
-if __name__ == "__main__":
-    main()
+documents = load_and_split_documents()
+embed_and_store_documents(documents)
