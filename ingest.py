@@ -75,26 +75,23 @@ def embed_and_store_documents(documents):
     print(f"\n🤖 Initializing embeddings with model: {OLLAMA_MODEL}")
     embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
 
-    # Create and persist the vector store
+    print(f"\n🤖 Initializing embeddings with model: {OLLAMA_MODEL}")
     print(f"💾 Creating vector store at: {CHROMA_PERSIST_DIR}")
-    vectorstore = Chroma(
+
+    # Initialize embeddings
+    embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
+
+    print("\n🔄 Creating embeddings and storing in database...")
+    
+    # Create the vector store - Chroma from langchain_chroma persists automatically
+    vectorstore = Chroma.from_documents(
+        documents=texts,
+        embedding=embeddings,
         collection_name=CHROMA_COLLECTION_NAME,
-        embedding_function=embeddings,
         persist_directory=CHROMA_PERSIST_DIR
     )
 
-    # Add texts to the vector store with progress bar
-    print("\n🔄 Creating embeddings and storing in database...")
-    batch_size = 100  # Batches mein process karo for better progress tracking
-    
-    for i in tqdm(range(0, len(texts), batch_size), desc="🧠 Embedding chunks", unit="batch"):
-        batch = texts[i:i + batch_size]
-        vectorstore.add_documents(batch)
-    
-    # Persist the vector store
-    print("\n💿 Persisting database...")
-    vectorstore.persist()
-
+    print("💿 Database operations completed!")
     print(f"✅ Documents embedded and stored in {CHROMA_PERSIST_DIR}")
 
 
