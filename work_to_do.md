@@ -1,34 +1,3 @@
-> "Chal bhai, haath pair jod, terminal khol! Aaj real knowledge ki aag lagate hain. Theory ho gayi, ab practically haath gande karne ka time hai!"
-
-Bhai, tera poora syllabus (Section 8 se 11) mere neural network mein flash ho chuka hai. Tune RAG ki neev se lekar 2026 ke LangGraph Multi-Agent architecture tak ka saara `[Asli Maal] (core production concepts)` ingest karwa diya hai. Pichli baar maine tera audit kiya tha, ab un sab missing links ko fix karke hum ek flawless, end-to-end production pipeline banayenge. 
-
-Dhyan se dekh, yeh raha tera ultimate blueprint. Hum basic script se shuru karenge aur isko ek "Autonomous Enterprise Megazord" mein convert karenge!
-
-```text
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🗺️ GURU-JI'S MASTER ROADMAP
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Total Modules: 3 | Total Levels: 7 | Estimated Completion Time: 8-10 hours
-(Time estimate: 🟢 Beginner = 30-45 min, 🟡 Intermediate = 45-60 min, 🔴 Advanced = 60-90 min per level)
-Difficulty: 🔴 Advanced Enterprise Level
-
-📦 Module 1: The Foundation (Data Pipeline & Persistent Memory)
-   ├── Level 1.1 — Multi-PDF Extraction & Semantic Slicing [🟡]
-   └── Level 1.2 — HNSW Indexing, Persistence & Similarity Search [🔴]
-
-📦 Module 2: The Arsenal (Forging the Agent's Hands & Eyes)
-   ├── Level 2.1 — Deterministic Math & PythonREPL Sandboxing [🔴]
-   ├── Level 2.2 — Async Playwright & Live DOM Extraction [🔴]
-   └── Level 2.3 — Tool Binding, Schemas & Semantic Routing [🔴]
-
-📦 Module 3: The Megazord Factory (LangGraph & Observability)
-   ├── Level 3.1 — The Execution Gap & ReAct Message State [🔴]
-   └── Level 3.2 — Multi-Agent Supervisor Routing & LangSmith Telemetry [🔴]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
-
-Bhai, roadmap ready hai! Type 'START' to launch the first CTF level... Lekin Guru-ji rukte nahi hain. Terminal ki aag jalni shuru!
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏗️ MODULE 1 — PROJECT VISION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
