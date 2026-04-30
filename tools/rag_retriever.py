@@ -33,7 +33,7 @@ class RAGRetriever:
             persist_directory=db_path
         )
     
-    def similarity_search_with_score(self, query: str, k: int = 2, min_relevance_score: float = 0.6) -> List[Tuple]:
+    def similarity_search_with_score(self, query: str, k: int = 2, min_relevance_score: float = 1.0) -> List[Tuple]:
         """
         Perform similarity search with scores in the vector database.
         
@@ -65,7 +65,7 @@ class RAGRetrievalTool(BaseTool):
         super().__init__()
         self.retriever = RAGRetriever()
     
-    def _run(self, query: str, min_relevance_score: float = 0.6) -> str:
+    def _run(self, query: str, min_relevance_score: float = 1.0) -> str:
         """
         Run the RAG retrieval tool.
         
@@ -84,11 +84,11 @@ class RAGRetrievalTool(BaseTool):
         formatted_results = []
         for doc, score in results:
             # Determine relevance level based on score
-            if score <= 0.2:
+            if score <= 0.6:
                 relevance = "Bahut strong match (almost exact semantic context)"
-            elif score <= 0.4:
+            elif score <= 0.8:
                 relevance = "Good match (relevant aur useful)"
-            elif score <= 0.6:
+            elif score <= 1.0:
                 relevance = "Medium relevance (thoda related, par shayad off-topic)"
             else:
                 relevance = "Weak match (contextually door, usually ignore karna better)"
@@ -125,11 +125,11 @@ def test_similarity_search():
         
         for i, (doc, score) in enumerate(results, 1):
             # Determine relevance level based on score
-            if score <= 0.2:
+            if score <= 0.6:
                 relevance = "Bahut strong match (almost exact semantic context)"
-            elif score <= 0.4:
+            elif score <= 0.8:
                 relevance = "Good match (relevant aur useful)"
-            elif score <= 0.6:
+            elif score <= 1.0:
                 relevance = "Medium relevance (thoda related, par shayad off-topic)"
             else:
                 relevance = "Weak match (contextually door, usually ignore karna better)"
