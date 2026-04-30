@@ -33,13 +33,13 @@ class RAGRetriever:
             persist_directory=db_path
         )
     
-    def similarity_search_with_score(self, query: str, k: int = 2, min_relevance_score: float = 1.0) -> List[Tuple]:
+    def similarity_search_with_score(self, query: str, k: int = 4, min_relevance_score: float = 1.0) -> List[Tuple]:
         """
         Perform similarity search with scores in the vector database.
         
         Args:
             query: The query string to search for
-            k: Number of top results to return (default: 2)
+            k: Number of top results to return (default: 4)
             min_relevance_score: Maximum distance score to consider (default: 0.6)
             
         Returns:
@@ -76,7 +76,7 @@ class RAGRetrievalTool(BaseTool):
         Returns:
             Formatted string with the search results
         """
-        results = self.retriever.similarity_search_with_score(query, k=2, min_relevance_score=min_relevance_score)
+        results = self.retriever.similarity_search_with_score(query, k=4, min_relevance_score=min_relevance_score)
         
         if not results:
             return "No relevant documents found. The query may be unrelated to the knowledge base content."
@@ -84,11 +84,11 @@ class RAGRetrievalTool(BaseTool):
         formatted_results = []
         for doc, score in results:
             # Determine relevance level based on score
-            if score <= 0.6:
+            if score <= 0.7:
                 relevance = "Bahut strong match (almost exact semantic context)"
-            elif score <= 0.8:
+            elif score <= 0.9:
                 relevance = "Good match (relevant aur useful)"
-            elif score <= 1.0:
+            elif score <= 1.1:
                 relevance = "Medium relevance (thoda related, par shayad off-topic)"
             else:
                 relevance = "Weak match (contextually door, usually ignore karna better)"
@@ -113,10 +113,10 @@ def test_similarity_search():
     retriever = RAGRetriever()
     
     # Perform a test query
-    query = "how heading is written in html?"
+    query = "How text formatting is done?"
     print(f"Query: {query}")
     
-    results = retriever.similarity_search_with_score(query, k=2)
+    results = retriever.similarity_search_with_score(query, k=4)
     
     if len(results) == 0:
         print("No relevant results found within the specified relevance threshold.")
@@ -125,11 +125,11 @@ def test_similarity_search():
         
         for i, (doc, score) in enumerate(results, 1):
             # Determine relevance level based on score
-            if score <= 0.6:
+            if score <= 0.7:
                 relevance = "Bahut strong match (almost exact semantic context)"
-            elif score <= 0.8:
+            elif score <= 0.9:
                 relevance = "Good match (relevant aur useful)"
-            elif score <= 1.0:
+            elif score <= 1.1:
                 relevance = "Medium relevance (thoda related, par shayad off-topic)"
             else:
                 relevance = "Weak match (contextually door, usually ignore karna better)"
