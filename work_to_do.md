@@ -1,3 +1,26 @@
+The Machine (What we are building):
+Hum "Agentic RAG PR Auditor" bana rahe hain. Yeh ek [Autonomous Multi-Agent System] (AI bots ki team jo khud decision leti hai) hai. Yeh system kisi bhi live Pull Request (PR) ka URL lega, us webpage se naya code extract karega, aur company ke private internal rulebooks (HTML, JS, MySQL cheatsheets) se match karke ek strict compliance audit report generate karega.
+
+💢 The Pain (The Real-World Problem it solves):
+
+Code Review Fatigue: Senior engineers apna 30-40% time sirf syntax, typos, aur company guidelines verify karne mein waste karte hain. Yeh boring hai aur isme human error ke chances bohot high hote hain.
+
+The LLM Context Gap: Agar hum normal ChatGPT ya GitHub Copilot use karein, toh unhe internet ka general knowledge toh hota hai, par unhe company ke strict internal private rules (jo PDFs mein band hain) nahi pata hote. Woh external standards pe code pass kar denge, par internal compliance fail ho jayegi.
+
+Dynamic Content Block: Normal web scrapers live PR pages (jo [Single Page Applications] hote hain) ka code nahi padh sakte kyunki wahan data JavaScript render hone ke baad aata hai.
+
+🎯 The Strategy (How we solve it):
+
+The Brain ([LangGraph]): Hum ek [Supervisor Agent] (traffic controller) banayenge jo incoming PR review task ko specialized workers mein distribute karega.
+
+The Eyes ([Playwright]): Ek async [Headless Browser] (bina UI ka invisible browser) PR link par jayega, JS load hone dega, aur naye code ka live DOM kheenchega.
+
+The Memory ([RAG Pipeline]): Teeno PDF cheatsheets ko [Semantic Chunking] (meaning ke hisaab se todna) karke [ChromaDB] mein persist karenge.
+
+The Execution: Code aur Rulebook dono LLM ko pass honge. LLM compare karega, bugs pakdega, aur ek proper markdown report generate karega.
+
+💡 Business Value:
+Yeh tool company ka Code Review time 80% tak reduce karega, [Technical Debt] (kharab code ka future cost) kam karega, aur ensure karega ki har naya code 100% internal compliance rules follow kare bina kisi human intervention ke.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🏗️ MODULE 1 — PROJECT VISION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
