@@ -23,11 +23,14 @@ class RAGRetriever:
         # Initialize embeddings
         self.embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
         
+        # Ensure we're using the full path to the database directory
+        db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', CHROMA_PERSIST_DIR))
+        
         # Load the persisted vector store
         self.vector_store = Chroma(
             collection_name=CHROMA_COLLECTION_NAME,
             embedding_function=self.embeddings,
-            persist_directory=CHROMA_PERSIST_DIR
+            persist_directory=db_path
         )
     
     def similarity_search_with_score(self, query: str, k: int = 2) -> List[Tuple]:
@@ -94,7 +97,7 @@ def test_similarity_search():
     retriever = RAGRetriever()
     
     # Perform a test query
-    query = "What is bias testing?"
+    query = "how heading is in html?"
     print(f"Query: {query}")
     
     results = retriever.similarity_search_with_score(query, k=2)
