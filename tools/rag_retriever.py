@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from langchain_core.tools import BaseTool
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
-from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_MODEL
+from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_EMBEDDING_MODEL
 
 
 class RAGRetriever:
@@ -21,7 +21,7 @@ class RAGRetriever:
     """
     def __init__(self):
         # Initialize embeddings
-        self.embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
+        self.embeddings = OllamaEmbeddings(model=OLLAMA_EMBEDDING_MODEL)
         
         # Ensure we're using the full path to the database directory
         db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', CHROMA_PERSIST_DIR))

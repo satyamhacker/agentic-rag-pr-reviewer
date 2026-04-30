@@ -4,7 +4,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
-from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, PDF_SOURCE_DIR, OLLAMA_MODEL
+from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, PDF_SOURCE_DIR, OLLAMA_EMBEDDING_MODEL
 import time
 from tqdm import tqdm
 
@@ -75,11 +75,11 @@ def embed_and_store_documents(documents):
     texts = text_splitter.split_documents(documents)
     print(f"✅ Documents split into {len(texts)} chunks.")
 
-    print(f"\n🤖 Initializing embeddings with model: {OLLAMA_MODEL}")
+    print(f"\n🤖 Initializing embeddings with model: {OLLAMA_EMBEDDING_MODEL}")
     print(f"💾 Creating vector store at: {CHROMA_PERSIST_DIR}")
 
     # Initialize embeddings
-    embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
+    embeddings = OllamaEmbeddings(model=OLLAMA_EMBEDDING_MODEL)
 
     print("\n🔄 Creating embeddings and storing in database...")
     

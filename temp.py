@@ -1,5 +1,5 @@
 import chromadb
-from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_MODEL
+from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_EMBEDDING_MODEL
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
 
@@ -24,7 +24,7 @@ except Exception as e:
 
 # 2. Query test using LangChain integration
 print("\n--- Testing Query ---")
-embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
+embeddings = OllamaEmbeddings(model=OLLAMA_EMBEDDING_MODEL)
 vector_store = Chroma(
     collection_name=CHROMA_COLLECTION_NAME,
     embedding_function=embeddings,
