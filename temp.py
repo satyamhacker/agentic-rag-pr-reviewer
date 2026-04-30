@@ -1,139 +1,44 @@
-import os
+import chromadb
+from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_MODEL
+from langchain_chroma import Chroma
+from langchain_ollama import OllamaEmbeddings
 
-def create_project_structure():
-    # Define the structure
-    structure = [
-        ".env",
-        ".gitignore",
-        "requirements.txt",
-        "knowledge_base/html_cheatsheet.pdf",
-        "knowledge_base/mysql_cheatsheet.pdf",
-        "knowledge_base/javascript_cheatsheet.pdf",
-        "database/chroma_db/.gitkeep",
-        "core/__init__.py",
-        "core/state.py",
-        "core/config.py",
-        "tools/__init__.py",
-        "tools/web_scraper.py",
-        "tools/code_repl.py",
-        "tools/rag_retriever.py",
-        "agents/__init__.py",
-        "agents/supervisor.py",
-        "agents/workers.py",
-        "ingest.py",
-        "main.py"
-    ]
+# 1. Connect to raw ChromaDB client to inspect metadata
+print("--- Inspecting Raw Database ---")
+client = chromadb.PersistentClient(path=CHROMA_PERSIST_DIR)
 
-    # Content for specific files
-    file_contents = {
-        ".gitignore": """# Environment variables
-.env
-.env.local
+# List collections
+print("Collections:", client.list_collections())
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+# Get the specific collection
+try:
+    collection = client.get_collection(CHROMA_COLLECTION_NAME)
+    print(f"\nCollection '{CHROMA_COLLECTION_NAME}' Count:", collection.count())
+    
+    peek_data = collection.peek(limit=1)
+    if peek_data and peek_data['ids']:
+        print(f"Peek (First ID):", peek_data['ids'][0])
+        print(f"Peek (First Metadata):", peek_data['metadatas'][0])
+except Exception as e:
+    print(f"Could not get collection details: {e}")
 
-# Database
-database/chroma_db/
+# 2. Query test using LangChain integration
+print("\n--- Testing Query ---")
+embeddings = OllamaEmbeddings(model=OLLAMA_MODEL)
+vector_store = Chroma(
+    collection_name=CHROMA_COLLECTION_NAME,
+    embedding_function=embeddings,
+    persist_directory=CHROMA_PERSIST_DIR
+)
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-""",
-        "requirements.txt": """langgraph
-langchain
-langchain-community
-chromadb
-playwright
-python-dotenv
-""",
-        "core/__init__.py": "# Core module initialization",
-        "tools/__init__.py": "# Tools module initialization",
-        "agents/__init__.py": "# Agents module initialization",
-        "core/state.py": """from typing import TypedDict, List, Annotated
-import operator
+query = "HTML headings"
+print(f"Querying for: '{query}'")
+results = vector_store.similarity_search_with_score(query, k=2)
 
-class AgentState(TypedDict):
-    messages: Annotated[List[str], operator.add]
-    # Add other state variables here
-""",
-        "core/config.py": """from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-# Initialize LLM or other global configurations here
-# Example: api_key = os.getenv("OPENAI_API_KEY")
-""",
-        "tools/web_scraper.py": """# Placeholder for Playwright async DOM extraction logic
-""",
-        "tools/code_repl.py": """# Placeholder for PythonREPL sandboxing wrapper
-""",
-        "tools/rag_retriever.py": """# Placeholder for ChromaDB retrieval logic
-""",
-        "agents/supervisor.py": """# Placeholder for LangGraph Supervisor (Routing logic)
-""",
-        "agents/workers.py": """# Placeholder for WebWorker and RagAuditor nodes
-""",
-        "ingest.py": """# Placeholder for PDF ingestion and embedding script
-""",
-        "main.py": """# Placeholder for Main Graph compilation and entry point
-"""
-    }
-
-    # Create directories and files
-    for path in structure:
-        # Create directory if it doesn't exist
-        dir_name = os.path.dirname(path)
-        if dir_name and not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-            print(f"Created directory: {dir_name}/")
-        
-        # Create file if it doesn't exist (or if it's a directory marker like .gitkeep)
-        if not os.path.isdir(path):
-            if path not in file_contents:
-                # For PDFs or binary files, just create an empty placeholder
-                if path.endswith(".pdf"):
-                    open(path, 'a').close()
-                    print(f"Created placeholder: {path}")
-                # For .gitkeep or empty files
-                else:
-                    with open(path, 'w') as f:
-                        pass
-                    print(f"Created empty file: {path}")
-            else:
-                # Write specific content
-                with open(path, 'w') as f:
-                    f.write(file_contents[path])
-                print(f"Created file with content: {path}")
-
-if __name__ == "__main__":
-    print("Initializing project structure...")
-    create_project_structure()
-    print("Project structure created successfully!")
-    print("Don't forget to add your PDFs to the 'knowledge_base/' folder.")
+if results:
+    for doc, score in results:
+        print(f"\nScore: {score:.4f}")
+        print(f"Source: {doc.metadata.get('source')}")
+        print(f"Preview: {doc.page_content[:100]}...")
+else:
+    print("No results found.")
