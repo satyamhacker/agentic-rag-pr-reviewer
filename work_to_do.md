@@ -1,3 +1,45 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🗂️ FILE-TO-MODULE MAP (Kaunsi file kahan kaam aayegi)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+agentic-rag-pr-reviewer/
+├── .env                        ← API keys (LangSmith, HuggingFace) — set karo before starting
+├── .gitignore                  ← chroma_db/, .env already added
+├── requirements.txt            ← pip install -r requirements.txt — sabse pehle run karo
+│
+├── knowledge_base_pdf/         ← Module 1 (Level 1.1) — teeno PDFs yahan hain
+│   ├── html_cheatsheet.pdf
+│   ├── javascript_cheatsheet.pdf
+│   └── mysql_cheatsheet.pdf
+│
+├── database/
+│   └── chroma_db/              ← Module 1 (Level 1.2) — ingest.py chalane ke baad SQLite banega
+│
+├── core/
+│   ├── config.py               ← Har module mein use hoga (LLM init, paths, env vars)
+│   └── state.py                ← Module 3 (Level 3.2) — AgentState TypedDict
+│
+├── tools/
+│   ├── rag_retriever.py        ← Module 2 (Level 2.2) — check_html_syntax, check_js_logic, check_sql_security
+│   ├── web_scraper.py          ← Module 2 (Level 2.1) — Playwright async DOM extraction
+│   └── code_repl.py            ← Module 2 (Level 2.2) — PythonREPL sandboxed tool
+│
+├── agents/
+│   ├── supervisor.py           ← Module 3 (Level 3.2) — LangGraph routing logic
+│   └── workers.py              ← Module 3 (Level 3.2) — web_scraper_node, rag_auditor_node
+│
+├── ingest.py                   ← Module 1 (Level 1.1 + 1.2) — RUN ONCE to embed PDFs to chroma_db
+└── main.py                     ← Module 3 (Level 3.2) — Graph compile + app.invoke() entry point
+
+📌 EXECUTION ORDER:
+   Step 1 → pip install -r requirements.txt
+   Step 2 → playwright install
+   Step 3 → Fill .env keys
+   Step 4 → python ingest.py          (Module 1 — run ONCE)
+   Step 5 → python main.py            (Module 3 — live agent)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 The Machine (What we are building):
 Hum "Agentic RAG PR Auditor" bana rahe hain. Yeh ek [Autonomous Multi-Agent System] (AI bots ki team jo khud decision leti hai) hai. Yeh system kisi bhi live Pull Request (PR) ka URL lega, us webpage se naya code extract karega, aur company ke private internal rulebooks (HTML, JS, MySQL cheatsheets) se match karke ek strict compliance audit report generate karega.
 
@@ -139,7 +181,7 @@ Text ko `[High-dimensional mathematical vectors]` (embeddings) mein convert kark
 - ❓ **The Logic (Kyun):** Yeh tera engine hai jo english words ko AI ke `[GPS Coordinates] (Vectors)` mein badlega.
 
 **Step 2: Database Persistence & Bootstrapping**
-- ⚡ **The Task (What):** `Chroma.from_documents` factory method use kar. Usme apne chunks, apna embedding model, `collection_name="rag_app"`, aur `persist_directory="./chroma_db"` strictly pass kar. 
+- ⚡ **The Task (What):** `Chroma.from_documents` factory method use kar. Usme apne chunks, apna embedding model, `collection_name="rag_app"`, aur `persist_directory="./database/chroma_db"` strictly pass kar. 
 - ❓ **The Logic (Kyun):** Yeh function tere chunks ko vectors mein convert karke `[HNSW] (graph indexing algorithm)` ke roop mein disk par ek SQLite file mein lock kar dega.
 - 💡 **Real-World Learning:** Yeh tera `[Idempotency]` (ek baar chalo aur bhool jao) ka foundation hai.
 
@@ -936,13 +978,13 @@ agentic-rag-pr-reviewer/
 ├── .gitignore            <-- [Filter] (Ignore .env, chroma_db, __pycache__)
 ├── requirements.txt      <-- [Dependency List]
 │
-├── 📂 knowledge_base/    <-- 🚨 TERE MISSING PDFs YAHAN AAYENGE! 🚨
+├── 📂 knowledge_base_pdf/  <-- PDFs yahan hain (folder already exists)
 │   ├── html_cheatsheet.pdf
-│   ├── mysql_cheatsheet.pdf
-│   └── javascript_cheatsheet.pdf
+│   ├── javascript_cheatsheet.pdf
+│   └── mysql_cheatsheet.pdf
 │
 ├── 📂 database/
-│   └── chroma_db/        <-- [Persistent Storage] (Yahan tere math vectors save honge)
+│   └── chroma_db/        <-- [Persistent Storage] (ingest.py chalane ke baad SQLite banega)
 │
 ├── 📂 core/              <-- [Central Nervous System]
 │   ├── __init__.py

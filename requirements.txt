@@ -1,6 +1,30 @@
-langgraph
+# Core LangChain
 langchain
 langchain-community
+langchain-chroma
+langchain-core
+langchain-experimental
+langgraph
+langsmith
+
+# Vector DB
 chromadb
+
+# PDF Parsing
+pypdf
+
+# Embeddings & LLM (Local)
+ollama
+
+# Web Scraping
 playwright
+nest_asyncio
+
+# Agents
+smolagents
+duckduckgo-search
+langchainhub
+
+# Utilities
 python-dotenv
+pydantic

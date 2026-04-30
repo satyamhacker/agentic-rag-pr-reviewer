@@ -1,6 +1,10 @@
-from typing import TypedDict, List, Annotated
+from typing import TypedDict, Sequence, Annotated
 import operator
+from langchain_core.messages import BaseMessage
+
 
 class AgentState(TypedDict):
-    messages: Annotated[List[str], operator.add]
-    # Add other state variables here
+    # operator.add ensures messages APPEND (not overwrite) across nodes — Module 3 Level 3.2
+    messages: Annotated[Sequence[BaseMessage], operator.add]
+    # Supervisor sets this to route traffic to the correct worker node
+    next_agent: str
