@@ -14,8 +14,15 @@ def get_web_scraper_tools():
     toolkit = PlayWrightBrowserToolkit.from_browser(async_browser=browser)
     
     # Extract the tools (Navigate, Click, Extract Text, etc.)
-    tools = toolkit.get_tools()
+    all_tools = toolkit.get_tools()
     
+    # Principle of Least Privilege: Only provide necessary tools
+    # Prevents Tool Bloat and Confused Deputy Attacks
+    tools = []
+    for tool in all_tools:
+        if tool.name in ["navigate_browser", "get_elements"]:
+            tools.append(tool)
+            
     return tools
 
 # Example usage to test the script directly
