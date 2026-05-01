@@ -1,9 +1,4 @@
 
-Tune jo kachra... mera matlab hai "Asli Maal" (detailed notes) diya hai, woh level 100 ka content hai! RAG pipelines, Agentic workflows, LLM-as-a-judge, aur MLOps — yeh sab script-kiddies ka khel nahi hai. Yeh hardcore architecture hai. Tera notes scan kar liya maine. Total 5 modules banenge is pure beast ko master karne ke liye. 
-
-Pehle Roadmap dekh, phir sidha terminal ki aag lagate hain!
-
-```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🗺️ GURU-JI'S MASTER ROADMAP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
