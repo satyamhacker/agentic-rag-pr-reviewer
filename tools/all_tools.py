@@ -11,11 +11,12 @@ def get_vector_store():
 @tool
 def check_html_syntax(query: str) -> str:
     """
-    Check HTML syntax and structural guidelines.
+    Search the database for HTML syntax and structural guidelines.
+    Pass the user's natural language question as the query.
     Use this tool exclusively when the query is about HTML tags, semantic elements, DOM structure, or HTML attributes.
     """
     vector_store = get_vector_store()
-    retriever = vector_store.as_retriever(search_kwargs={"k": 4, "filter": {"source": {"$contains": "html_cheatsheet"}}})
+    retriever = vector_store.as_retriever(search_kwargs={"k": 4, "filter": {"source": "html_cheatsheet.pdf"}})
     results = retriever.invoke(query)
     
     if not results:
@@ -25,11 +26,12 @@ def check_html_syntax(query: str) -> str:
 @tool
 def check_js_logic(query: str) -> str:
     """
-    Check JavaScript logic, programming patterns, and syntax.
+    Search the database for JavaScript logic, programming patterns, and syntax.
+    Pass the user's natural language question as the query.
     Use this tool exclusively when the query is about JavaScript functions, variables, loops, logic, arrays, objects, or DOM manipulation.
     """
     vector_store = get_vector_store()
-    retriever = vector_store.as_retriever(search_kwargs={"k": 4, "filter": {"source": {"$contains": "javascript_cheatsheet"}}})
+    retriever = vector_store.as_retriever(search_kwargs={"k": 4, "filter": {"source": "javascript_cheatsheet.pdf"}})
     results = retriever.invoke(query)
     
     if not results:
@@ -39,11 +41,12 @@ def check_js_logic(query: str) -> str:
 @tool
 def check_sql_security(query: str) -> str:
     """
-    Check SQL queries for security, best practices, and correct syntax.
+    Search the database for SQL queries, security, best practices, and syntax.
+    Pass the user's natural language question as the query, NOT an actual SQL statement.
     Use this tool exclusively when the query is about SQL databases, SQL injection, queries, joins, or table structures.
     """
     vector_store = get_vector_store()
-    retriever = vector_store.as_retriever(search_kwargs={"k": 4, "filter": {"source": {"$contains": "mysql_cheatsheet"}}})
+    retriever = vector_store.as_retriever(search_kwargs={"k": 4, "filter": {"source": "mysql_cheatsheet.pdf"}})
     results = retriever.invoke(query)
     
     if not results:

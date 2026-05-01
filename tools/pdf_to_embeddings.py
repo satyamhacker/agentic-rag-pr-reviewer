@@ -51,6 +51,10 @@ class PDFEmbedder:
                     # Load pages (returns a list)
                     pages = loader.load()
                     
+                    # Update metadata source to use only the basename
+                    for page in pages:
+                        page.metadata["source"] = pdf_name
+                        
                     # Extend to maintain a flat list of documents
                     documents.extend(pages)
                 except Exception as e:
