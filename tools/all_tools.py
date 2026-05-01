@@ -1,5 +1,8 @@
 from langchain_core.tools import tool
 from tools.rag_retriever import RAGRetriever
+# Step 1: The Brittle Scraper Shield
+from langchain_community.tools import DuckDuckGoSearchRun
+
 
 def get_vector_store():
     """Helper to initialize and return the Chroma vector store."""
@@ -46,3 +49,18 @@ def check_sql_security(query: str) -> str:
     if not results:
         return "No SQL security information found."
     return "\n\n".join([doc.page_content for doc in results])
+
+
+@tool
+def safe_duckduckgo_search(query: str) -> str:
+    """
+    Search the web for current events or real-time information using DuckDuckGo.
+    Use this tool when you need up-to-date knowledge that is not in the local database.
+    """
+    try:
+        ddg = DuckDuckGoSearchRun()
+        return ddg.invoke(query)
+    except Exception as e:
+        print(f"⚠️ [Graceful Degradation] DuckDuckGo Search failed: {str(e)}")
+        # Manual print message / trigger backup API fallback concept
+        return "Search failed due to rate limits or network issues. Triggering backup protocol or please search manually."
