@@ -80,8 +80,7 @@ Key dependencies:
 - `langchain-experimental` → Python REPL tool
 - `chromadb` → Vector database for RAG
 - `pypdf` → PDF parsing
-- `playwright` → Headless browser for web scraping
-- `duckduckgo-search` → Web search capability
+- `playwright` → Headless browser for web scraping and live search
 - `langchainhub` → Pull prompts from LangChain Hub
 - `python-dotenv` → Load `.env` variables
 
@@ -125,7 +124,6 @@ Current tools:
 - `check_html_syntax(query)` → Searches ChromaDB filtered to `html_cheatsheet.pdf` — answers HTML tag/structure questions
 - `check_js_logic(query)` → Searches ChromaDB filtered to `javascript_cheatsheet.pdf` — answers JavaScript questions
 - `check_sql_security(query)` → Searches ChromaDB filtered to `mysql_cheatsheet.pdf` — answers SQL/database questions
-- `safe_duckduckgo_search(query)` → Searches the live web using DuckDuckGo — used for real-time/current info. Includes graceful degradation on rate limits.
 
 > 🔧 **If you want to:** Add a new tool (e.g., a CSS checker, a Python syntax tool) → **add a new `@tool` function in this file**, then register it in `binding_tools_to_llm.py`.
 
@@ -196,8 +194,9 @@ The agent uses this for math calculations, array manipulations, or any logic tha
 ---
 
 ### `tools/web_scraper.py`
-**Playwright-powered headless browser tools for live web scraping.**
+**Playwright-powered headless browser tools for live web scraping and searching.**
 
+- `playwright_web_search(query)` → Uses Playwright to do a headless search on Yahoo and extracts the text snippets from the results.
 - `get_web_scraper_tools()` → Starts an async Playwright browser, wraps it in `PlayWrightBrowserToolkit`, and returns only 2 tools (Principle of Least Privilege):
   - `navigate_browser` → Goes to a URL
   - `get_elements` → Extracts elements from the current page
