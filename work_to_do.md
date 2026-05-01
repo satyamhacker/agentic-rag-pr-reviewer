@@ -560,7 +560,7 @@ LLM ko ek Python shell (`[REPL]`) ka access dena taaki woh calculations aur scri
 > So: `repl_tool = Tool(name="python_repl", func=python_repl.run, description="...")`
 
 **Step 2: Retrievers as Tools (The Knowledge Injectors)**
-- 📁 **FILE:** `tools/rag_retriever.py`
+- 📁 **FILE:** `tools/all_tools.py`
 - ⚡ **The Task (What):** Apne Level 1.2 wale Vector DB ko 3 alag-alag tools mein wrap kar `@tool` decorator ka use karke. Har tool ke andar DB par `.invoke(query)` chala.
   - Tool 1: `check_html_syntax`
   - Tool 2: `check_js_logic`
