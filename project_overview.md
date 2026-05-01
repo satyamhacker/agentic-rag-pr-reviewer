@@ -1,6 +1,6 @@
 # 🤖 Agentic RAG PR Reviewer — Complete Project Overview
 
-> A step-by-step guide to everything this project is, what it does, what is already built, and what is planned next.
+> A step-by-step guide to everything this project is, what it does, and what is already built.
 
 ---
 
@@ -12,9 +12,10 @@
 4. [Tech Stack](#4-tech-stack)
 5. [Architecture Overview](#5-architecture-overview)
 6. [Features Implemented (Current State)](#6-features-implemented-current-state)
-7. [Features In Progress / Planned](#7-features-in-progress--planned)
-8. [The Learning Roadmap (Modules)](#8-the-learning-roadmap-modules)
-9. [Business Value](#9-business-value)
+7. [Business Value](#7-business-value)
+8. [How To Run The Project](#8-how-to-run-the-project)
+9. [Config & Database Directories Explained](#9-config--database-directories-explained)
+10. [Quick Guide — "Where Do I Go To..."](#10-quick-guide--where-do-i-go-to)
 
 ---
 
@@ -124,23 +125,7 @@ agentic-rag-pr-reviewer/
     └── mysql_cheatsheet.pdf
 ```
 
-### Target / Final Architecture (Planned — ChatGPT-Style GUI)
 
-```
-agentic-rag-pr-reviewer/
-│
-├── gui/
-│   ├── __init__.py         ← Empty package file
-│   ├── app.py              ← Main window, layout, all UI logic
-│   ├── backend_bridge.py   ← RAGBackend class only (wrapper for RAGRetriever)
-│   └── theme.py            ← Colors + fonts (Phase 7)
-│
-├── tools/                  ← (Unchanged existing backend)
-├── config/                 ← (Unchanged existing backend)
-├── database/               ← (Unchanged existing backend)
-├── knowledge_base_pdf/     ← (Unchanged existing backend)
-└── main.py                 ← (Unchanged interactive terminal)
-```
 ---
 
 ## 6. Features Implemented (Current State)
@@ -305,99 +290,11 @@ Single source of truth — all other files import from here:
 | `CHROMA_COLLECTION_NAME` | `rag_app` | ChromaDB collection name |
 | `PDF_SOURCE_DIR` | `./knowledge_base_pdf` | Where PDF files live |
 
----
 
-## 7. Features In Progress / Planned (The GUI Layer)
-
-These are the features documented in `work_to_do.md` that are **not yet implemented** in the actual codebase:
-
-### 🔲 Module 3, Level 3.1 — Execution Gap & ReAct Message State
-
-Formalizing the tool execution loop using proper LangChain message objects:
-- Wrap user query in `HumanMessage`
-- Append the full `ai_message` object (preserves `tool_calls` metadata)
-- Execute each tool call in a loop
-- Wrap results in `ToolMessage` with matching `tool_call_id` (prevents `400 Bad Request` "Orphaned Tool Message" errors)
-- Feed entire message history back to the LLM for final synthesis
-
-**Files to create:** `test_execution_gap.py`, updates to `main.py`
 
 ---
 
-### 🔲 Module 3, Level 3.2 — LangGraph Multi-Agent Supervisor + LangSmith Telemetry
-
-The **final capstone feature** — the full multi-agent factory:
-
-**`core/state.py`:**
-- `AgentState` TypedDict with `messages: Annotated[Sequence[BaseMessage], operator.add]`
-- The `operator.add` reducer ensures state is appended, never overwritten across agent hops
-
-**`agents/supervisor.py`:**
-- `supervisor_node(state)` — reads messages, decides routing
-- Outputs one of: `"web_scraper"`, `"rag_auditor"`, or `"FINISH"`
-
-**`agents/workers.py`:**
-- `web_scraper_node(state)` — runs Playwright navigate + extract
-- `rag_auditor_node(state)` — runs RAG tool calls for HTML/JS/SQL
-
-**`main.py` (updated):**
-- `StateGraph(AgentState)` initialization
-- Add all three nodes
-- `add_conditional_edges` from Supervisor based on `state["next_agent"]`
-- `add_edge(START, "supervisor")` as the graph entry point
-- `.compile()` and `.invoke()`
-
-**LangSmith Observability:**
-- Enable via `.env`: `LANGCHAIN_TRACING_V2=true` + `LANGCHAIN_API_KEY`
-- Every agent step, token count, and latency visible as a DAG trace in the LangSmith web UI
-
----
-
-### 🔲 Module 1.5 — Retrieval Optimization (Optional Enhancement)
-
-Advanced RAG techniques explored in the learning material but not implemented in code:
-
-- **HyDE (Hypothetical Document Embeddings)** — Generate a fake "ideal answer" first, then search DB for similar content (Answer-to-Answer matching vs Question-to-Answer)
-- **Contextual Compression** (`ContextualCompressionRetriever`) — Filter retrieved chunks by relevance score before feeding to LLM, using `EmbeddingsFilter` with `similarity_threshold=0.76`
-- **StrOutputParser Integration** — Explicit LCEL pipeline (`prompt | llm | StrOutputParser()`) to always return clean strings, never raw `AIMessage` objects
-
----
-
-### 🔲 Module 2.5 — smolagents CodeAgent (Optional Enhancement)
-
-Explored in learning material — a separate agent type from HuggingFace's `smolagents` library:
-- `CodeAgent` that generates and executes Python code on the fly, rather than calling pre-defined tools
-- Read-Only Agency principle — only safe tools provided (no write/email/DB access)
-- Useful for dynamic tasks like "read this CSV and plot a chart"
-
----
-
-## 8. The Learning Roadmap (Modules)
-
-This project was built as a step-by-step learning journey:
-
-```
-Module 1: The Foundation (RAG Core)
-  ├── Level 1.1 ✅ — PDF loading, RecursiveCharacterTextSplitter, metadata tagging
-  └── Level 1.2 ✅ — ChromaDB HNSW indexing, disk persistence, similarity search
-
-Module 2: The Arsenal (Agentic Tooling)
-  ├── Level 2.1 ✅ — Async Playwright headless browser DOM extraction
-  ├── Level 2.2 ✅ — PythonREPL sandboxing + Domain-filtered RAG tools
-  ├── Level 2.3 ✅ — Tool binding to LLM, semantic routing, O(1) tool registry
-  └── Level 2.5 ✅ — Interactive terminal loop with execution gap bridging
-
-Module 3: The ChatGPT-Style GUI (Tkinter Frontend)
-  ├── Phase 1-2 🔲 — Basic GUI & PDF Uploads
-  ├── Phase 3-5 🔲 — Threading, Bubbles, and Relevance Scores
-  └── Phase 6-7 🔲 — Sidebar & Premium Dark Theme Polish
-```
-
-**Legend:** ✅ = Implemented in codebase | 🔲 = Planned / Not yet implemented
-
----
-
-## 9. Business Value
+## 7. Business Value
 
 | Metric | Before This Tool | After This Tool |
 |---|---|---|
@@ -410,7 +307,7 @@ Module 3: The ChatGPT-Style GUI (Tkinter Frontend)
 
 ---
 
-## 10. How To Run The Project
+## 8. How To Run The Project
 
 ### Step 1: Setup
 ```bash
@@ -456,7 +353,7 @@ Then type questions like:
 
 ---
 
-## 11. Config & Database Directories Explained
+## 9. Config & Database Directories Explained
 
 ### `config/config.py`
 **Single source of truth for all configuration values.** All other files import constants from here — never hardcode values directly in tool or agent files.
@@ -487,7 +384,7 @@ Empty package initializer. Makes `config/` importable as a Python module. Do not
 
 ---
 
-## 12. Quick Guide — "Where Do I Go To..."
+## 10. Quick Guide — "Where Do I Go To..."
 
 | Task | File(s) to Edit |
 |---|---|
