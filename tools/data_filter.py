@@ -5,7 +5,7 @@ from core.config import OLLAMA_FILTER_MODEL
 
 class MistralDataFilter:
     """
-    A class to filter raw data retrieved from tools using the Mistral:7b model.
+    A class to filter raw data retrieved from tools using the qwen2.5:7b model.
     It removes unwanted information and extracts only the relevant parts based on the user's query.
     """
     def __init__(self):

@@ -59,7 +59,7 @@ def main():
                         raw_data = tool.invoke(tool_args)
                         print(f"📄 Retrieved raw data from {tool_name}. Size: {len(str(raw_data))} characters.")
                         
-                        print("🧹 Filtering relevant data using Mistral:7b...")
+                        print("🧹 Filtering relevant data using qwen2.5:7b...")
                         filtered_data = data_filter.filter_data(user_input, str(raw_data))
                         
                         print("\n✨ Final Relevant Data:\n")
