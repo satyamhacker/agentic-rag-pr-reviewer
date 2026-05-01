@@ -1,5 +1,5 @@
 from langchain_core.tools import tool
-from tools.pdf_to_embeddings import RAGRetriever
+from tools.rag_retriever import RAGRetriever
 # Step 1: The Brittle Scraper Shield
 from langchain_community.tools import DuckDuckGoSearchRun
 
