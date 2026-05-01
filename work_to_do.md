@@ -1,4 +1,4 @@
-﻿Bhai, yeh lo — ZERO TO HERO, complete, nothing missed, no confusion, no code.
+Bhai, yeh lo — ZERO TO HERO, complete, nothing missed, no confusion, no code.
 
 ---
 
@@ -83,7 +83,16 @@ Bina backend connection test kiye aage badhna matlab sundar UI andar se khaali. 
 
 `app.py` mein `tkinter` import karo. `tk.Tk()` root window banao. Title do. Geometry set karo `750x550`. `mainloop()` chalaao. Kuch aur nahi.
 
-**Definition of Done:** Sirf window khule. Crash na ho.
+**⚠️ Window Close Handler (WM_DELETE_WINDOW):**
+`root.protocol("WM_DELETE_WINDOW", on_closing)` bind karo. `on_closing` function explicitly define karo:
+```
+def on_closing():
+    self.stop_flag = True   # class-level flag — __init__ mein False se start hoga
+    root.destroy()
+```
+`self.stop_flag` ko class ke `__init__` mein `self.stop_flag = False` se initialize karo. Background threads apni loop mein `if self.stop_flag: return` check karein. Bina iske window band karne ke baad background thread silently chal ta rehega aur app hang karega.
+
+**Definition of Done:** Sirf window khule. Crash na ho. Window band karne pe app cleanly exit ho.
 
 ---
 
@@ -111,7 +120,12 @@ Zone 2 (MIDDLE) → ScrolledText → Response area            ← BAAD MEIN PACK
 - `error_tag` → red color
 - `system_tag` → gray color
 
-**Definition of Done:** Teenon zones dikh rahein hain — label upar, input+button neeche, response area beech mein.
+> 📝 **Note:** Yeh tags Phase 1 ke ScrolledText ke liye hain. Phase 4 mein ScrolledText hata ke Canvas aur bubbles aayenge — yeh tags tab use nahi honge. Phase 1 ke liye abhi yeh theek hain.
+
+**⚠️ Input Field Character Limit (500 chars):**
+`tk.StringVar` use karo input field ke liye. `trace_add("write", callback)` se character count monitor karo. Maximum 500 characters rakho. Limit exceed hone pe status label mein warning dikhao — input field abruptly block mat karo. Ya `validatecommand` use karo ek alternative ke roop mein.
+
+**Definition of Done:** Teenon zones dikh rahein hain — label upar, input+button neeche, response area beech mein. 500 char limit kaam kar raha hai.
 
 ---
 
@@ -121,6 +135,18 @@ Zone 2 (MIDDLE) → ScrolledText → Response area            ← BAAD MEIN PACK
 - `sys.path` mein project root add karo taaki `tools/` aur `config/` visible hon
 - `from tools.rag_retriever import RAGRetriever` import karo
 - `from config.config import` se constants import karo
+
+**⚠️ MISS 3 — Import Failure Graceful Handling:**
+Saare backend imports ko `try/except ImportError` mein wrap karo:
+```
+try:
+    from tools.rag_retriever import RAGRetriever
+    BACKEND_AVAILABLE = True
+except ImportError as e:
+    BACKEND_AVAILABLE = False
+    IMPORT_ERROR = str(e)
+```
+`initialize()` method ke shuru mein check karo — agar `BACKEND_AVAILABLE` False hai toh readable error do: `"Backend packages missing. Run pip install -r requirements.txt"`. Bina iske app crash ho jaati hai bina koi helpful message ke.
 
 **⚠️ Critical Verification — Pehle Yeh Karo:**
 Apna `tools/rag_retriever.py` kholo aur `__init__` method ka signature dekho:
@@ -157,13 +183,15 @@ Central function ka flow:
 3. Input field clear karo immediately
 4. Send button DISABLE karo
 5. Status label → "⏳ Thinking..."
-6. backend_bridge.ask(query) call karo
+6. backend_bridge.ask(query) call karo  ← abhi plain string return karta hai
 7. User message response area mein insert karo (user_tag)
 8. AI answer response area mein insert karo (ai_tag)
 9. Send button ENABLE karo
 10. Status label → "✅ Ready"
 11. Response area scroll to bottom: .see(tk.END)
 ```
+
+> 📝 **Forward Note:** Phase 5 mein `ask()` ka return type `(answer, score)` tuple ho jaayega. Tab step 6 badlega: `answer, score = backend.ask(query)`. Abhi Phase 1 mein sirf `answer = backend.ask(query)` use karo.
 
 **ScrolledText mein insert karne ka rule:**
 ```
@@ -277,9 +305,12 @@ Seedha copy karo.
 
 **Kyun copy aur move nahi:** User ki original file safe rehni chahiye.
 
+**⚠️ MISS 4 — Folder Exist Na Kare Tab?**
+Copy se pehle `os.makedirs("knowledge_base_pdf/", exist_ok=True)` call karo. `exist_ok=True` ensure karta hai — folder pehle se ho toh error nahi, na ho toh bana do. Bina iske nayi machine pe project clone karne pe `shutil.copy()` crash kar dega.
+
 **Error handling:** `try/except` mein wrap karo — permission error ya disk full hone pe status label mein message dikhao, crash mat karo.
 
-**Definition of Done:** Selected PDF `knowledge_base_pdf/` folder mein copy ho gayi.
+**Definition of Done:** Selected PDF `knowledge_base_pdf/` folder mein copy ho gayi. Folder na ho toh auto-create ho.
 
 ---
 
@@ -383,6 +414,15 @@ start_angle = 0
 - Thread complete hote hi → canvas `pack_forget()` ya `place_forget()`
 - Animation bhi band karo ek flag se — `self.spinning = False`
 
+**⚠️ MISS 5 — `self.spinning` Flag Thread-Safety Detail:**
+`self.spinning` flag `app.py` ki class ke `__init__` mein define karo — `self.spinning = False`. Animation shuru hote hi `True` karo, band hote hi `False`. Animation loop ke shuru mein check karo:
+```
+if not self.spinning:
+    return  # loop yahan band ho jaata hai
+root.after(50, animate_spinner)  # tabhi schedule karo
+```
+Yeh flag sirf main thread se set/read hota hai (animation sirf main thread control karta hai) — isliye thread-safe hai.
+
 **Kyun Canvas aur GIF nahi:** Canvas pure Python hai, koi external file dependency nahi.
 
 ---
@@ -428,8 +468,10 @@ Phase 1 ka send function abhi blocking hai. Same pattern:
 ```
 Thread start karo → backend.ask(query) background mein
 → Complete hone pe result_queue mein daalo
-→ check_queue se result lo → bubble draw karo → spinner hide karo
+→ check_queue se result lo → response area update karo → spinner hide karo
 ```
+
+> 📝 **Note:** Abhi Phase 3 mein response area mein text insert hoga (ScrolledText). Phase 4 ke baad yeh callback "bubble draw karo" mein badlega. Abhi sirf thread + queue pattern implement karo — UI part wahi rahega jo Phase 1 mein tha.
 
 ---
 
@@ -447,12 +489,33 @@ Thread start karo → backend.embed_pdf() background mein
 
 ---
 
+### Step 7.5: Request Lock — Multiple Simultaneous Requests Handle Karo
+
+**⚠️ Processing Lock Flag:**
+User agar quickly do baar Send dabaye — do threads start ho jaayengi. Dono results queue mein aayenge — UI corrupt ho sakti hai.
+
+`__init__` mein yeh teen flags ek saath define karo (sab yahan hain taaki bhule nahi):
+```
+self.stop_flag = False      # window close handler ke liye (Step 2)
+self.spinning = False       # spinner animation ke liye (Step 3)
+self.processing = False     # duplicate request lock ke liye (yahan)
+```
+Send button click hone pe pehle check karo:
+```
+if self.processing:
+    return  # silently ignore duplicate request
+```
+Thread start hone pe `self.processing = True` karo. Thread complete hone pe (queue callback mein) `self.processing = False` karo. Yeh ensure karta hai ek waqt mein sirf ek request process ho.
+
+---
+
 ### ✅ Definition of Done — Phase 3 Complete:
 - ✅ Startup ke dauran window responsive hai
 - ✅ Query ke dauran window drag kar sakte ho
 - ✅ Embedding ke dauran window freeze nahi hoti
 - ✅ Spinner dikh raha hai processing ke dauran
 - ✅ Spinner band ho jaata hai jab result aata hai
+- ✅ Double-send (2 baar quickly click) pe sirf ek request jaati hai
 
 ---
 
@@ -522,12 +585,21 @@ Ek function banao `draw_bubble(canvas, text, sender, score=None)`.
 
 **Kyun text pehle:** Text ka actual rendered size dynamic hota hai — wrap hone ke baad kitni lines bani woh pehle se pata nahi. Pehle text draw karo, size lo, phir uske hisaab se rectangle banao. Ulta kiya toh size mismatch hogi.
 
+> 📝 **`current_y` scope note:** `current_y` is function ke bahar maintain hogi — ek shared variable hogi `app.py` mein. `draw_bubble()` internally `current_y` ko read aur update karega. Ya alternatively ise function ka return value banao — function nayi `current_y` return kare. Dono approaches theek hain — ek consistent raho.
+
 **Alignment:**
 - `sender == "user"` → right side, bubble background `#1e3a5f`
 - `sender == "ai"` → left side, bubble background `#1e1e1e`
 
 **Rounded rectangle:**
 Tkinter `create_rectangle` ke corners round nahi hote. Workaround — 4 small ovals corners pe draw karo + 1 rectangle middle mein. Ya `create_polygon` with `smooth=True`.
+
+**⚠️ MISS 7 — Bubble Minimum Width:**
+Agar query bohot choti ho — jaise "Hi" — toh bubble bahut narrow ban jaayegi aur ugly dikhegi. Rectangle banate waqt minimum width enforce karo:
+```
+bubble_width = max(calculated_width, 120)
+```
+120px minimum rakho taaki single word bubbles bhi proper dikhein.
 
 ---
 
@@ -551,6 +623,22 @@ Auto scroll to bottom:
 canvas.yview_moveto(1.0)
 ```
 
+**⚠️ MISS 8 — Canvas Mousewheel Bind (Platform-Specific):**
+Bina iske user mouse se scroll nahi kar paayega — sirf scrollbar drag se hoga. Canvas pe bind karo:
+```
+import sys
+if sys.platform == "win32" or sys.platform == "linux":
+    canvas.bind("<MouseWheel>", on_mousewheel)
+else:  # macOS
+    canvas.bind("<Button-4>", on_mousewheel_up)
+    canvas.bind("<Button-5>", on_mousewheel_down)
+```
+`on_mousewheel` function (Windows/Linux):
+```
+def on_mousewheel(event):
+    canvas.yview_scroll(-1 * (event.delta // 120), "units")
+```
+
 ---
 
 ### Step 5: Window Resize Pe Bubbles Redraw Karo
@@ -566,6 +654,15 @@ canvas.bind("<Configure>", on_resize)
 3. chat_history list loop karo → har message ke liye draw_bubble() call karo
 4. scrollregion update karo
 ```
+
+**⚠️ MISS 9 — Score Pass Karna Redraw Mein Explicitly:**
+Redraw loop mein `chat_history` ke har tuple ko properly unpack karo:
+```
+for item in chat_history:
+    sender, text, score = item
+    draw_bubble(canvas, text, sender, score)
+```
+Score `None` bhi ho sakta hai user messages ke liye — `draw_bubble` already handle karta hai. Yeh connection explicitly yaad rakhna zaroori hai warna redraw mein score drop ho jaayega.
 
 **Kyun zaroori hai:** Window resize hone pe canvas width badlegi — text wrap width bhi badlegi — bubbles purani positions pe broken dikhenge.
 
@@ -619,10 +716,19 @@ display_score = round(1 / (1 + raw_score), 2)
 
 ### Step 2: `backend_bridge.py` mein `ask()` Modify Karo
 
-`ask()` method abhi sirf `answer_string` return karta hai. Ab tuple return karo:
+**⚠️ Do Separate Calls: Score + Answer:**
+`filter_relevant_content()` sirf filtered text return karta hai — score expose nahi karta. Isliye `ask()` method mein do alag calls karo:
 ```
-return (answer_string, top_raw_score)
+# Step 1: Score ke liye
+results = retriever.similarity_search_with_score(query, k=1)
+raw_score = results[0][1] if results else 0.0
+
+# Step 2: Actual answer ke liye
+answer = filter_relevant_content(query)
+
+return (answer, raw_score)
 ```
+Haan, do calls hain — ek score ke liye, ek answer ke liye. Yeh intentional hai kyunki `filter_relevant_content()` already internally retrieval karta hai — uska score expose nahi hota directly.
 
 `similarity_search_with_score()` already `(Document, score)` tuples ki list return karta hai — pehli tuple ka score nikalo — woh top match hai.
 
@@ -724,12 +830,16 @@ App start hote hi ek `refresh_sidebar()` function call karo.
 
 `refresh_sidebar()` logic:
 ```
-1. listbox.delete(0, tk.END)  ← purani list clear
-2. os.listdir("knowledge_base_pdf/") se files lo
-3. Sirf .pdf files filter karo
-4. Har filename listbox mein insert karo
-5. Agar folder empty hai → "No PDFs yet" message insert karo
+1. os.path.exists("knowledge_base_pdf/") check karo  ← PEHLE YEH
+   → Agar nahi hai: os.makedirs() se banao, "No PDFs yet" dikhao, return
+2. listbox.delete(0, tk.END)  ← purani list clear
+3. os.listdir("knowledge_base_pdf/") se files lo
+4. Sirf .pdf files filter karo
+5. Har filename listbox mein insert karo
+6. Agar folder empty hai → "No PDFs yet" message insert karo
 ```
+
+**⚠️ Crash Prevention:** `os.listdir()` `FileNotFoundError` throw karega agar folder exist na kare. Step 1 ka check mandatory hai — skip mat karo.
 
 ---
 
@@ -820,7 +930,19 @@ Poori app mein hardcoded colors ki jagah `theme.BG_PRIMARY` use karo.
 
 ---
 
-### Step 2: `tk` vs `ttk` Theming — Critical Difference
+### Step 2: Widget-by-Widget Dark Theme Apply Karo
+
+**Sabse Pehle — Root Window:**
+```
+root.configure(bg=theme.BG_PRIMARY)
+```
+Yeh bhoolna sabse common mistake hai — corners aur widget gaps mein default gray dikh jaata hai jab tak root ka background set na ho.
+
+**Chat Canvas — Explicitly Set Karo:**
+```
+canvas.configure(bg=theme.BG_PRIMARY)
+```
+Canvas ka background parent frame se inherit nahi hota — explicitly configure karna padta hai. Bina iske chat canvas default white/gray dikhega.
 
 **`tk` widgets** (`tk.Button`, `tk.Label`, `tk.Frame`, `tk.Canvas`, `tk.Listbox`):
 - Directly `bg` aur `fg` parameter lete hain
@@ -907,6 +1029,20 @@ smooth_scroll_to_bottom(current_pos):
 
 Har naye bubble ke baad yeh function call karo `canvas.yview()` se current position lo.
 
+**⚠️ MISS 14 — Smooth Scroll vs User Manual Scroll Conflict:**
+Smooth scroll chalte waqt agar user manually upar scroll kare — smooth scroll usse forcefully neeche le jaayega. Jarring UX hai.
+
+Ek flag maintain karo:
+```
+self.user_scrolled_up = False
+```
+Canvas ke `<MouseWheel>` event mein check karo — agar user upar ja raha hai:
+```
+if event.delta > 0:  # upar scroll
+    self.user_scrolled_up = True
+```
+Nayi message aane pe — agar `user_scrolled_up` True hai toh smooth scroll mat chalaao. Agar user wapas bottom pe aaye toh `self.user_scrolled_up = False` karo.
+
 ---
 
 ### Step 7 — Critical: Enter Key + Button Same Central Function
@@ -930,6 +1066,8 @@ Is function ke andar hi:
 - ✅ AI bubble fade-in entrance animation
 - ✅ Blinking cursor during AI generation
 - ✅ Smooth scroll on new message
+- ✅ Mouse wheel se chat scroll kaam karta hai (Windows + macOS dono)
+- ✅ Smooth scroll user ke manual scroll se conflict nahi karta
 
 ---
 
