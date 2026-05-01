@@ -8,9 +8,9 @@ from langchain_ollama import ChatOllama
 from config.config import OLLAMA_MODEL
 
 # Import all custom tools
-from tools.all_tools import check_html_syntax, check_js_logic, check_sql_security, safe_duckduckgo_search
+from tools.all_tools import check_html_syntax, check_js_logic, check_sql_security
 from tools.code_repl import repl_tool
-from tools.web_scraper import get_web_scraper_tools
+from tools.web_scraper import get_web_scraper_tools, playwright_web_search
 
 # Extract web tools
 web_tools = get_web_scraper_tools()
@@ -23,7 +23,7 @@ master_tools = [
     check_html_syntax,
     check_js_logic,
     check_sql_security,
-    safe_duckduckgo_search,
+    playwright_web_search,
     navigate_tool,
     get_element_tool,
     repl_tool,
