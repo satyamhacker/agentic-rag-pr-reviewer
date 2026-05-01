@@ -27,7 +27,7 @@
 - Cross-checks it against the company's **private internal rulebooks** (HTML, JavaScript, MySQL cheatsheets stored as PDFs).
 - Generates a **compliance audit report** answering whether the code follows internal guidelines.
 
-The end goal is a fully autonomous **"Stack-Master Code Auditor"** — a multi-agent factory where a **Supervisor Agent** routes tasks to specialized **Worker Agents** (Web Scraper Worker and RAG Auditor Worker), coordinated by **LangGraph**, and monitored in real-time by **LangSmith**.
+The end goal is a fully autonomous **ChatGPT-style Desktop Application** — built with Tkinter, where users can upload PDFs, ask questions, and get AI answers in a chat bubble interface with source citations, powered by a robust underlying RAG backend.
 
 ---
 
@@ -124,26 +124,23 @@ agentic-rag-pr-reviewer/
     └── mysql_cheatsheet.pdf
 ```
 
-### Target / Final Architecture (Planned — Module 3)
+### Target / Final Architecture (Planned — ChatGPT-Style GUI)
 
 ```
 agentic-rag-pr-reviewer/
 │
-├── core/
-│   ├── config.py              ← LLM init + constants
-│   └── state.py               ← AgentState TypedDict (LangGraph shared memory)
+├── gui/
+│   ├── __init__.py         ← Empty package file
+│   ├── app.py              ← Main window, layout, all UI logic
+│   ├── backend_bridge.py   ← RAGBackend class only (wrapper for RAGRetriever)
+│   └── theme.py            ← Colors + fonts (Phase 7)
 │
-├── agents/
-│   ├── supervisor.py          ← Supervisor routing logic
-│   └── workers.py             ← WebScraper + RAGAuditor worker nodes
-│
-├── tools/                     ← (Same as current)
-├── database/                  ← (Same as current)
-├── knowledge_base_pdf/        ← (Same as current)
-├── ingest.py                  ← Standalone PDF embedding pipeline
-└── main.py                    ← StateGraph compile + invoke
+├── tools/                  ← (Unchanged existing backend)
+├── config/                 ← (Unchanged existing backend)
+├── database/               ← (Unchanged existing backend)
+├── knowledge_base_pdf/     ← (Unchanged existing backend)
+└── main.py                 ← (Unchanged interactive terminal)
 ```
-
 ---
 
 ## 6. Features Implemented (Current State)
@@ -155,9 +152,11 @@ agentic-rag-pr-reviewer/
 The `PDFEmbedder` class implements a complete one-time ingestion pipeline:
 - Scans `knowledge_base_pdf/` and loads all `.pdf` files using `PyPDFLoader`
 - Tags each page's metadata with `source = pdf_filename` (used later for domain filtering)
+- Calculates a **global character offset** (`global_offset`) to precisely track the character position of chunks relative to the entire PDF document, not just the page.
 - Splits all pages into overlapping chunks using `RecursiveCharacterTextSplitter`:
   - `chunk_size = 1000` characters
   - `chunk_overlap = 200` characters (prevents context loss at chunk boundaries)
+  - `add_start_index = True` (tracks exact character offset)
 - Generates vector embeddings using `OllamaEmbeddings (nomic-embed-text)`
 - Stores embeddings persistently in **ChromaDB** at `./database/chroma_db`
 
@@ -241,7 +240,7 @@ Two capabilities in one file:
 The `MistralDataFilter` class takes raw, noisy data from any tool and strips it down to only the parts relevant to the user's question.
 
 - Uses `qwen2.5:7b` as the filter model (configured via `.env`)
-- Strict system prompt: *"Extract ONLY the parts directly relevant to the user's query. Do not add any new knowledge."*
+- Strict system prompt: Extracts ONLY relevant info and is explicitly forced to **preserve source citations** (e.g., `[Source PDF Page: X | Start Index: Y]`). It avoids hallucinating "No matching content found."
 - `filter_data(query, context)` — blocking call, returns filtered string
 - `stream_data(query, context)` — streaming call, yields tokens one by one (used in `main.py` for real-time printing)
 
@@ -278,13 +277,14 @@ The central assembly point for the agent:
 
 The entry point runs a terminal-based interactive agent loop:
 
-1. **Pulls RAG Prompt** from LangChain Hub (`rlm/rag-prompt:50442af1` — pinned to exact commit hash to prevent version drift)
-2. **Interactive Loop**: Accepts user input from the terminal
-3. **Streams LLM response** in real-time, token by token
-4. **Detects tool calls** in the LLM response (`response.tool_calls`)
-5. **Executes the tool** using `tool_registry[tool_name].invoke(tool_args)`
-6. **Filters the raw result** through `MistralDataFilter.stream_data()`
-7. **Streams the final clean answer** to the terminal
+1. **Pulls RAG Prompt** from LangChain Hub (`rlm/rag-prompt:50442af1`) - currently unused but available.
+2. **Interactive Loop**: Accepts user input from the terminal.
+3. **Strict Agent Constraint**: Wraps the user input alongside a `SystemMessage` that explicitly forces the agent to use the provided PDF tools (`check_html_syntax`, etc.) instead of general knowledge.
+4. **Streams LLM response** in real-time, token by token.
+5. **Detects tool calls** in the LLM response (`response.tool_calls`).
+6. **Executes the tool** using `tool_registry[tool_name].invoke(tool_args)`.
+7. **Filters the raw result** through `MistralDataFilter.stream_data()`.
+8. **Streams the final clean answer** to the terminal, including source citations.
 
 This implements the **Execution Gap Bridge** — the LLM generates a JSON "ticket" describing which tool to use, and `main.py` actually executes it and feeds the result back.
 
@@ -307,7 +307,7 @@ Single source of truth — all other files import from here:
 
 ---
 
-## 7. Features In Progress / Planned
+## 7. Features In Progress / Planned (The GUI Layer)
 
 These are the features documented in `work_to_do.md` that are **not yet implemented** in the actual codebase:
 
@@ -374,23 +374,23 @@ Explored in learning material — a separate agent type from HuggingFace's `smol
 
 ## 8. The Learning Roadmap (Modules)
 
-This project was built as a step-by-step learning journey across 3 modules:
+This project was built as a step-by-step learning journey:
 
 ```
 Module 1: The Foundation (RAG Core)
   ├── Level 1.1 ✅ — PDF loading, RecursiveCharacterTextSplitter, metadata tagging
-  ├── Level 1.2 ✅ — ChromaDB HNSW indexing, disk persistence, similarity search
-  └── Level 1.5 🔲 — HyDE, Contextual Compression Reranking, LCEL Output Parsing
+  └── Level 1.2 ✅ — ChromaDB HNSW indexing, disk persistence, similarity search
 
 Module 2: The Arsenal (Agentic Tooling)
   ├── Level 2.1 ✅ — Async Playwright headless browser DOM extraction
   ├── Level 2.2 ✅ — PythonREPL sandboxing + Domain-filtered RAG tools
   ├── Level 2.3 ✅ — Tool binding to LLM, semantic routing, O(1) tool registry
-  └── Level 2.5 🔲 — smolagents CodeAgent, Search API fallback routing, LangChain Hub
+  └── Level 2.5 ✅ — Interactive terminal loop with execution gap bridging
 
-Module 3: The Megazord Factory (LangGraph Orchestration)
-  ├── Level 3.1 🔲 — Execution Gap bridge, ReAct message state, ToolMessage ID matching
-  └── Level 3.2 🔲 — Multi-Agent Supervisor routing, LangGraph StateGraph, LangSmith telemetry
+Module 3: The ChatGPT-Style GUI (Tkinter Frontend)
+  ├── Phase 1-2 🔲 — Basic GUI & PDF Uploads
+  ├── Phase 3-5 🔲 — Threading, Bubbles, and Relevance Scores
+  └── Phase 6-7 🔲 — Sidebar & Premium Dark Theme Polish
 ```
 
 **Legend:** ✅ = Implemented in codebase | 🔲 = Planned / Not yet implemented
