@@ -54,9 +54,12 @@ class PDFEmbedder:
                     # Load pages (returns a list)
                     pages = loader.load()
                     
-                    # Update metadata source to use only the basename
+                    # Update metadata source to use only the basename and calculate global offset
+                    running_char_count = 0
                     for page in pages:
                         page.metadata["source"] = pdf_name
+                        page.metadata["global_offset"] = running_char_count
+                        running_char_count += len(page.page_content)
                         
                     # Extend to maintain a flat list of documents
                     documents.extend(pages)
@@ -91,6 +94,13 @@ class PDFEmbedder:
 
         # Split documents
         texts = text_splitter.split_documents(documents)
+        
+        # Adjust start_index to be global across the whole PDF
+        for t in texts:
+            page_offset = t.metadata.get("start_index", 0)
+            global_offset = t.metadata.get("global_offset", 0)
+            t.metadata["start_index"] = page_offset + global_offset
+            
         print(f"✅ Documents split into {len(texts)} chunks.")
 
         print(f"\n🤖 Initializing embeddings with model: {self.embedding_model}")
