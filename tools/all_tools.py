@@ -21,6 +21,8 @@ def check_html_syntax(query: str) -> str:
     formatted_docs = []
     for doc in results:
         page = doc.metadata.get("page", "Unknown")
+        if isinstance(page, int):
+            page += 1
         start_index = doc.metadata.get("start_index", "Unknown")
         formatted_docs.append(f"[Source PDF Page: {page} | Start Index: {start_index}]\n{doc.page_content}")
     return "\n\n".join(formatted_docs)
@@ -42,6 +44,8 @@ def check_js_logic(query: str) -> str:
     formatted_docs = []
     for doc in results:
         page = doc.metadata.get("page", "Unknown")
+        if isinstance(page, int):
+            page += 1
         start_index = doc.metadata.get("start_index", "Unknown")
         formatted_docs.append(f"[Source PDF Page: {page} | Start Index: {start_index}]\n{doc.page_content}")
     return "\n\n".join(formatted_docs)
@@ -63,6 +67,8 @@ def check_sql_security(query: str) -> str:
     formatted_docs = []
     for doc in results:
         page = doc.metadata.get("page", "Unknown")
+        if isinstance(page, int):
+            page += 1
         start_index = doc.metadata.get("start_index", "Unknown")
         formatted_docs.append(f"[Source PDF Page: {page} | Start Index: {start_index}]\n{doc.page_content}")
     return "\n\n".join(formatted_docs)

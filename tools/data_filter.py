@@ -14,7 +14,7 @@ class MistralDataFilter:
         
         # Define the strict filtering prompt
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a strict filtering assistant. Analyze the provided context and extract ONLY the parts that are directly relevant to the user's query. Remove any unrelated or unwanted information. If the context includes source citations like [Source PDF Page: X | Start Index: Y], you MUST include those citations in your response to indicate exactly where the information came from. If nothing is relevant, return 'No matching content found.' Do not add any new knowledge."),
+            ("system", "You are a strict filtering assistant. Extract ONLY the information from the context that directly answers the user's query. You MUST preserve the exact citations (e.g. [Source PDF Page: X | Start Index: Y]) immediately before the extracted text. Do NOT add any extra conversational filler. If the context contains relevant information, do NOT append 'No matching content found.' If and ONLY if the context is completely irrelevant, return exactly 'No matching content found.'"),
             ("user", "Query: {query}\n\nContext:\n{context}")
         ])
         
