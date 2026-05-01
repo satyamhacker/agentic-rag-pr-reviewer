@@ -41,3 +41,17 @@ class MistralDataFilter:
         })
         
         return filtered_content
+
+    def stream_data(self, query: str, context: str):
+        """
+        Streams the filtered context against the user query.
+        """
+        if not context or context.strip() == "":
+            yield "No context provided to filter."
+            return
+            
+        for chunk in self.chain.stream({
+            "query": query,
+            "context": context
+        }):
+            yield chunk

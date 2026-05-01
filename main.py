@@ -41,8 +41,18 @@ def main():
                 continue
                 
             print(f"⏳ Processing: '{user_input}'...")
-            # Invoke LLM with tools
-            response = llm_with_tools.invoke(user_input)
+            # Stream LLM with tools
+            response = None
+            print("\n💬 Agent Thinking/Response: ", end="")
+            for chunk in llm_with_tools.stream(user_input):
+                if response is None:
+                    response = chunk
+                else:
+                    response = response + chunk
+                
+                if chunk.content:
+                    print(chunk.content, end="", flush=True)
+            print() # New line after stream
             
             if response.tool_calls:
                 from tools.data_filter import MistralDataFilter
@@ -51,7 +61,7 @@ def main():
                 for tool_call in response.tool_calls:
                     tool_name = tool_call["name"]
                     tool_args = tool_call["args"]
-                    print(f"🛠️ Agent decided to use tool: {tool_name} with args: {tool_args}")
+                    print(f"\n🛠️ Agent decided to use tool: {tool_name} with args: {tool_args}")
                     
                     if tool_name in tool_registry:
                         tool = tool_registry[tool_name]
@@ -59,18 +69,18 @@ def main():
                         raw_data = tool.invoke(tool_args)
                         print(f"📄 Retrieved raw data from {tool_name}. Size: {len(str(raw_data))} characters.")
                         
-                        print("🧹 Filtering relevant data using qwen2.5:7b...")
-                        filtered_data = data_filter.filter_data(user_input, str(raw_data))
+                        print("🧹 Filtering relevant data using qwen2.5:7b...\n")
+                        print("✨ Final Relevant Data:\n")
                         
-                        print("\n✨ Final Relevant Data:\n")
-                        print(filtered_data)
-                        print("\n" + "="*50)
+                        # Stream the filtered data
+                        for filter_chunk in data_filter.stream_data(user_input, str(raw_data)):
+                            print(filter_chunk, end="", flush=True)
+                        
+                        print("\n\n" + "="*50)
                     else:
                         print(f"❌ Unknown tool requested by agent: {tool_name}")
             else:
-                # If no tool was called, print the direct response
-                print("\n💬 Agent Response:\n")
-                print(response.content)
+                # If no tool was called, the response was already streamed above
                 print("\n" + "="*50)
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")
