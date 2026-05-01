@@ -1,7 +1,7 @@
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from core.config import OLLAMA_FILTER_MODEL
+from config.config import OLLAMA_FILTER_MODEL
 
 class MistralDataFilter:
     """

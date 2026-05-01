@@ -14,7 +14,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings, ChatOllama
-from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_EMBEDDING_MODEL, OLLAMA_FILTER_MODEL
+from config.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_EMBEDDING_MODEL, OLLAMA_FILTER_MODEL
 
 class RAGRetriever:
     """

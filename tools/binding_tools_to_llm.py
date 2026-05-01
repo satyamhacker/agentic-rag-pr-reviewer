@@ -5,7 +5,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from langchain_ollama import ChatOllama
-from core.config import OLLAMA_MODEL
+from config.config import OLLAMA_MODEL
 
 # Import all custom tools
 from tools.all_tools import check_html_syntax, check_js_logic, check_sql_security, safe_duckduckgo_search
