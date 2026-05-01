@@ -1,10 +1,13 @@
 import os
 import sys
+from langchainhub import Client
+
+client = Client()
+
 
 # Ensure core configuration can be accessed
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-from langchain import hub
 from tools.binding_tools_to_llm import llm_with_tools, tool_registry
 
 def main():
@@ -14,7 +17,7 @@ def main():
     # Using strict Commit Hash (:50442af1) to prevent Version Mutability risks
     try:
         print("📥 Pulling RAG Prompt from LangChain Hub...")
-        prompt = hub.pull("rlm/rag-prompt:50442af1")
+        prompt = client.pull("rlm/rag-prompt:50442af1")
         print("✅ Successfully pulled 'rlm/rag-prompt:50442af1'")
     except Exception as e:
         print(f"❌ Failed to pull prompt from LangChain Hub: {str(e)}")
@@ -38,9 +41,37 @@ def main():
                 continue
                 
             print(f"⏳ Processing: '{user_input}'...")
-            # TODO: Agent execution logic will be plugged in here later
-            print("🔜 The compiled agent graph will process this query in upcoming steps!")
+            # Invoke LLM with tools
+            response = llm_with_tools.invoke(user_input)
             
+            if response.tool_calls:
+                from tools.data_filter import MistralDataFilter
+                data_filter = MistralDataFilter()
+                
+                for tool_call in response.tool_calls:
+                    tool_name = tool_call["name"]
+                    tool_args = tool_call["args"]
+                    print(f"🛠️ Agent decided to use tool: {tool_name} with args: {tool_args}")
+                    
+                    if tool_name in tool_registry:
+                        tool = tool_registry[tool_name]
+                        # Execute the tool
+                        raw_data = tool.invoke(tool_args)
+                        print(f"📄 Retrieved raw data from {tool_name}. Size: {len(str(raw_data))} characters.")
+                        
+                        print("🧹 Filtering relevant data using Mistral:7b...")
+                        filtered_data = data_filter.filter_data(user_input, str(raw_data))
+                        
+                        print("\n✨ Final Relevant Data:\n")
+                        print(filtered_data)
+                        print("\n" + "="*50)
+                    else:
+                        print(f"❌ Unknown tool requested by agent: {tool_name}")
+            else:
+                # If no tool was called, print the direct response
+                print("\n💬 Agent Response:\n")
+                print(response.content)
+                print("\n" + "="*50)
         except KeyboardInterrupt:
             print("\n👋 Goodbye!")
             break
