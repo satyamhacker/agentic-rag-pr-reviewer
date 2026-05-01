@@ -102,6 +102,20 @@ class RAGRetrievalTool(BaseTool):
         raise NotImplementedError("RAGRetriever does not support async")
 
 
+def format_docs(docs):
+    """
+    Custom formatter to extract page_content from document chunks
+    and join them with double newlines for LLM context clarity.
+    
+    Args:
+        docs: List of Document objects from retriever
+        
+    Returns:
+        str: Formatted string with all chunks joined by \n\n
+    """
+    return "\n\n".join([doc.page_content for doc in docs])
+
+
 # Test function to verify the functionality
 def test_similarity_search():
     """
@@ -137,6 +151,13 @@ def test_similarity_search():
             print(f"\n--- Result {i} (Score: {score:.4f} - {relevance}) ---")
             print(f"Content Preview: {doc.page_content[:200]}...")
             print(f"Source: {doc.metadata.get('source', 'Unknown')}")
+
+        # Test the format_docs function
+        print("\n--- Testing format_docs ---")
+        docs = [doc for doc, score in results]
+        formatted_text = format_docs(docs)
+        print(f"Formatted output length: {len(formatted_text)} characters")
+        print(f"Preview: {formatted_text[:200]}...")
     
     print("\n✅ RAG Retriever test completed.")
 
