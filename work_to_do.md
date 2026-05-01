@@ -64,13 +64,21 @@ agentic-rag-pr-reviewer/
 ├── tools/
 ├── main.py
 │
-└── eval_engine/         <-- NAYA FOLDER (Yahan aag lagegi!)
+└── eval_engine/                  <-- THE UPGRADED MLOPS SUITE
     ├── __init__.py
-    ├── feature_1_basic_judge.py
-    ├── feature_2_ragas_triad.py
-    ├── feature_3_multiturn_state.py
-    ├── feature_4_pandas_rca.py
-    └── feature_5_mlops_guards.py
+    │
+    ├── eval_config.py            <-- (NAYA) Configuration & Agnostic Setup (Level 2.1)
+    │                                 Yahan local LLM wrappers aur LangSmith telemetry set hogi.
+    │
+    ├── mock_datasets.py          <-- (NAYA) Data Isolation (Level 3.2 & 4.2)
+    │                                 Saara dummy data, conversational history, aur 1-to-1 mapped 
+    │                                 ground truth arrays yahan rahenge taaki test files clean rahein.
+    │
+    ├── test_1_foundations.py     <-- (Module 1) Probabilistic testing, Perplexity, LLM-as-a-judge
+    ├── test_2_ragas_triad.py     <-- (Module 2) RAG Triad execution & Tracing
+    ├── test_3_multi_turn.py      <-- (Module 3) Langchain Schematics & Matrix Scorecards
+    ├── test_4_e2e_rca.py         <-- (Module 4) Full QA Chain invoke & Pandas DataFrame RCA
+    └── test_5_mlops_agent.py     <-- (Module 5) Agent Tool Pruning, Cloud Fallbacks & DoW Protection
 
 
 ---
