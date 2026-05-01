@@ -17,7 +17,13 @@ def check_html_syntax(query: str) -> str:
     
     if not results:
         return "No HTML syntax information found."
-    return "\n\n".join([doc.page_content for doc in results])
+    
+    formatted_docs = []
+    for doc in results:
+        page = doc.metadata.get("page", "Unknown")
+        start_index = doc.metadata.get("start_index", "Unknown")
+        formatted_docs.append(f"[Source PDF Page: {page} | Start Index: {start_index}]\n{doc.page_content}")
+    return "\n\n".join(formatted_docs)
 
 @tool
 def check_js_logic(query: str) -> str:
@@ -32,7 +38,13 @@ def check_js_logic(query: str) -> str:
     
     if not results:
         return "No JS logic information found."
-    return "\n\n".join([doc.page_content for doc in results])
+    
+    formatted_docs = []
+    for doc in results:
+        page = doc.metadata.get("page", "Unknown")
+        start_index = doc.metadata.get("start_index", "Unknown")
+        formatted_docs.append(f"[Source PDF Page: {page} | Start Index: {start_index}]\n{doc.page_content}")
+    return "\n\n".join(formatted_docs)
 
 @tool
 def check_sql_security(query: str) -> str:
@@ -47,4 +59,10 @@ def check_sql_security(query: str) -> str:
     
     if not results:
         return "No SQL security information found."
-    return "\n\n".join([doc.page_content for doc in results])
+    
+    formatted_docs = []
+    for doc in results:
+        page = doc.metadata.get("page", "Unknown")
+        start_index = doc.metadata.get("start_index", "Unknown")
+        formatted_docs.append(f"[Source PDF Page: {page} | Start Index: {start_index}]\n{doc.page_content}")
+    return "\n\n".join(formatted_docs)
