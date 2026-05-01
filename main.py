@@ -43,8 +43,13 @@ def main():
             print(f"⏳ Processing: '{user_input}'...")
             # Stream LLM with tools
             response = None
+            from langchain_core.messages import SystemMessage, HumanMessage
+            messages = [
+                SystemMessage(content="You are a strict compliance auditor. You MUST use the provided tools (check_html_syntax, check_js_logic, check_sql_security) to search the internal knowledge base for ANY questions about HTML, JavaScript, or SQL. Do not answer from your general knowledge without querying the database first."),
+                HumanMessage(content=user_input)
+            ]
             print("\n💬 Agent Thinking/Response: ", end="")
-            for chunk in llm_with_tools.stream(user_input):
+            for chunk in llm_with_tools.stream(messages):
                 if response is None:
                     response = chunk
                 else:

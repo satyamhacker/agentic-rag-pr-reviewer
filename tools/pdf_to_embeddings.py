@@ -1,9 +1,12 @@
 import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
-from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, PDF_SOURCE_DIR, OLLAMA_EMBEDDING_MODEL
+from config.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, PDF_SOURCE_DIR, OLLAMA_EMBEDDING_MODEL
 from tqdm import tqdm
 
 class PDFEmbedder:
@@ -78,12 +81,12 @@ class PDFEmbedder:
             return
 
         print("\n🔪 Splitting documents into chunks...")
-        # Initialize text splitter
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=200,
             length_function=len,
             is_separator_regex=False,
+            add_start_index=True,
         )
 
         # Split documents
