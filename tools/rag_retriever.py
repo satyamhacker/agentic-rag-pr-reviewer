@@ -10,9 +10,12 @@ from typing import List, Tuple
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from langchain_core.tools import BaseTool
+from langchain_core.documents import Document
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from langchain_chroma import Chroma
-from langchain_ollama import OllamaEmbeddings
-from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_EMBEDDING_MODEL
+from langchain_ollama import OllamaEmbeddings, ChatOllama
+from core.config import CHROMA_PERSIST_DIR, CHROMA_COLLECTION_NAME, OLLAMA_EMBEDDING_MODEL, OLLAMA_FILTER_MODEL
 
 
 class RAGRetriever:
@@ -81,21 +84,8 @@ class RAGRetrievalTool(BaseTool):
         if not results:
             return "No relevant documents found. The query may be unrelated to the knowledge base content."
         
-        formatted_results = []
-        for doc, score in results:
-            # Determine relevance level based on score
-            if score <= 0.7:
-                relevance = "Bahut strong match (almost exact semantic context)"
-            elif score <= 0.9:
-                relevance = "Good match (relevant aur useful)"
-            elif score <= 1.1:
-                relevance = "Medium relevance (thoda related, par shayad off-topic)"
-            else:
-                relevance = "Weak match (contextually door, usually ignore karna better)"
-                
-            formatted_results.append(f"Content: {doc.page_content}\nSource: {doc.metadata.get('source', 'Unknown')}\nScore: {score:.4f} ({relevance})\n")
-        
-        return "\n".join(formatted_results)
+        docs = [doc for doc, score in results]
+        return filter_relevant_content(query, docs)
     
     async def _arun(self, query: str):
         """Async version of the tool."""
@@ -114,6 +104,40 @@ def format_docs(docs):
         str: Formatted string with all chunks joined by \n\n
     """
     return "\n\n".join([doc.page_content for doc in docs])
+
+
+def filter_relevant_content(query: str, docs: List[Document]) -> str:
+    """
+    Analyzes the retrieved documents using mistral:7b and filters out irrelevant content.
+    Only passes matching content based on the user query.
+    
+    Args:
+        query: The user's search query
+        docs: List of Document objects from retriever
+        
+    Returns:
+        str: Filtered content containing only relevant information
+    """
+    llm = ChatOllama(model=OLLAMA_FILTER_MODEL, temperature=0)
+    
+    # Format the documents using the existing function
+    formatted_context = format_docs(docs)
+    
+    # Explicitly create a ChatPromptTemplate
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a strict filtering assistant. Analyze the provided context and extract ONLY the parts that are directly relevant to the user's query. Remove any unrelated or unwanted information. If nothing is relevant, return 'No matching content found.' Do not add any new knowledge."),
+        ("user", "Query: {query}\n\nContext:\n{context}")
+    ])
+    
+    # Create the pipeline ending with StrOutputParser to get raw string instead of AIMessage
+    chain = prompt | llm | StrOutputParser()
+    
+    filtered_content = chain.invoke({
+        "query": query,
+        "context": formatted_context
+    })
+    
+    return filtered_content
 
 
 # Test function to verify the functionality
@@ -136,28 +160,11 @@ def test_similarity_search():
         print("No relevant results found within the specified relevance threshold.")
     else:
         print(f"Number of results: {len(results)}")
-        
-        for i, (doc, score) in enumerate(results, 1):
-            # Determine relevance level based on score
-            if score <= 0.7:
-                relevance = "Bahut strong match (almost exact semantic context)"
-            elif score <= 0.9:
-                relevance = "Good match (relevant aur useful)"
-            elif score <= 1.1:
-                relevance = "Medium relevance (thoda related, par shayad off-topic)"
-            else:
-                relevance = "Weak match (contextually door, usually ignore karna better)"
-                
-            print(f"\n--- Result {i} (Score: {score:.4f} - {relevance}) ---")
-            print(f"Content Preview: {doc.page_content[:200]}...")
-            print(f"Source: {doc.metadata.get('source', 'Unknown')}")
-
-        # Test the format_docs function
-        print("\n--- Testing format_docs ---")
         docs = [doc for doc, score in results]
-        formatted_text = format_docs(docs)
-        print(f"Formatted output length: {len(formatted_text)} characters")
-        print(f"Preview: {formatted_text[:200]}...")
+        
+        print("\n--- Filtering relevant content with LLM ---")
+        filtered_text = filter_relevant_content(query, docs)
+        print(filtered_text)
     
     print("\n✅ RAG Retriever test completed.")
 
