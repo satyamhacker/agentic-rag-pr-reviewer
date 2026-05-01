@@ -36,3 +36,4 @@ database/chroma_db/
 *.swp
 *.swo
 *~
+tools/database/chroma_db/chroma.sqlite3

@@ -23,7 +23,6 @@ nest_asyncio
 
 # Agents
 smolagents
-duckduckgo-search
 langchainhub
 
 # Utilities
