@@ -73,6 +73,9 @@ def format_docs(docs):
     return "\n\n".join([doc.page_content for doc in docs])
 
 def filter_relevant_content(query: str, docs: List[Document]) -> str:
+    if not docs:
+        return ""
+        
     llm = ChatOllama(model=OLLAMA_FILTER_MODEL, temperature=0)
     formatted_context = format_docs(docs)
     prompt = ChatPromptTemplate.from_messages([
