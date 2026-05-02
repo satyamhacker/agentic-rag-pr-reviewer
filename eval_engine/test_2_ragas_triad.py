@@ -14,6 +14,7 @@ load_dotenv()
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 
 from eval_engine.eval_config import local_llm, local_embeddings, eval_tracer
+from eval_engine.mock_datasets import QUESTIONS, GROUND_TRUTH_ANSWERS, SAMPLE_CONTEXTS
 from langchain_core.runnables import RunnableConfig
 
 from ragas import evaluate, EvaluationDataset, SingleTurnSample
@@ -31,26 +32,28 @@ if __name__ == "__main__":
     context_precision.embeddings = local_embeddings
     context_recall.embeddings = local_embeddings
 
-    # Step 5: 3 sample entries for the dataset mapped to pdfs
+    # Step 5: Create samples using data from mock_datasets.py
+    # Pick one HTML (idx 0), one JS (idx 5), and one SQL (idx 7)
+    
     sample1 = SingleTurnSample(
-        user_input="What is the semantic HTML tag for navigation?",
-        response="The <nav> tag is used for navigation links.",
-        retrieved_contexts=["HTML5 introduced the <nav> semantic tag. It represents a section of a page whose purpose is to provide navigation links."],
-        reference="The <nav> tag is used to define navigation menus."
+        user_input=QUESTIONS[0],
+        response=f"The answer is: {GROUND_TRUTH_ANSWERS[0]}",
+        retrieved_contexts=[GROUND_TRUTH_ANSWERS[0], SAMPLE_CONTEXTS[0]],
+        reference=GROUND_TRUTH_ANSWERS[0]
     )
 
     sample2 = SingleTurnSample(
-        user_input="How do you declare a block-scoped variable in JavaScript?",
-        response="You can use let or const to declare a block-scoped variable.",
-        retrieved_contexts=["In ES6, JavaScript introduced let and const for block-scoped variable declarations, unlike var which is function-scoped."],
-        reference="Use let or const for block-scoped variables."
+        user_input=QUESTIONS[5],
+        response=f"The answer is: {GROUND_TRUTH_ANSWERS[5]}",
+        retrieved_contexts=[GROUND_TRUTH_ANSWERS[5], SAMPLE_CONTEXTS[1]],
+        reference=GROUND_TRUTH_ANSWERS[5]
     )
 
     sample3 = SingleTurnSample(
-        user_input="What is the correct SQL syntax for an INNER JOIN?",
-        response="SELECT columns FROM table1 INNER JOIN table2 ON table1.column = table2.column;",
-        retrieved_contexts=["An INNER JOIN selects records that have matching values in both tables. Syntax: SELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id;"],
-        reference="SELECT column_name(s) FROM table1 INNER JOIN table2 ON table1.column_name = table2.column_name;"
+        user_input=QUESTIONS[7],
+        response=f"The answer is: {GROUND_TRUTH_ANSWERS[7]}",
+        retrieved_contexts=[GROUND_TRUTH_ANSWERS[7], SAMPLE_CONTEXTS[2]],
+        reference=GROUND_TRUTH_ANSWERS[7]
     )
 
     # Creating EvaluationDataset
