@@ -28,3 +28,8 @@ langchainhub
 # Utilities
 python-dotenv
 pydantic
+
+# Evaluation & Metrics
+langchain-google-genai
+ragas==0.2.6
+pandas

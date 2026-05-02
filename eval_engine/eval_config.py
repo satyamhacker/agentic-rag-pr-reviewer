@@ -31,8 +31,7 @@ fallback_llm = ChatGoogleGenerativeAI(
 # 3️⃣ 🔥 LANGSMITH TRACER (EVAL ONLY)
 # Note: project_name alag rakhne se dashboard mein traffic mix nahi hoga
 eval_tracer = LangChainTracer(
-    project_name="llm-eval-suite",
-    api_key=os.getenv("LANGCHAIN_API_KEY")
+    project_name="llm-eval-suite"
 )
 
 # Export for test files
