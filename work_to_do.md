@@ -93,9 +93,11 @@ agentic-rag-pr-reviewer/
 *   **Step 1 (Maps to Level 1.1 - Probabilistic Testing):** 
     *   Ek function likh jo tere main LLM (`qwen2.5:7b`) ko 2 baar call kare same RAG question ke sath — use a real question from your knowledge base, e.g., *"What is the semantic HTML tag for navigation?"* (answer lives in `knowledge_base_pdf/html_cheatsheet.pdf`). Ek baar `temperature=0.0` rakh aur ek baar `0.8`.
     *   *Learning:* Print karke dekh ki `0.8` wala answer har baar slightly alag hota hai. Yahi proof hai ki `assert answer == "Use the nav tag"` production mein fail hoga — isliye hume probabilistic metrics chahiye, not string equality.
+
 *   **Step 2 (Maps to Level 1.2 - Metrics & Perplexity):**
     *   `sentence_transformers` library import kar. Agent ke 2 responses ko vector arrays (embeddings) mein convert kar aur unke beech ka **Cosine Similarity** nikal.
     *   Security ke liye HuggingFace `evaluate` library se **Perplexity** calculate kar. Agar koi user gibberish query dalta hai jaise `"asdfgh sql xyz??"` instead of a real SQL question, toh high perplexity score usko early-reject kar degi before it wastes a ChromaDB lookup.
+    
 *   **Step 3 (Maps to Level 1.3 - Teacher Judge & XML + System Tracing):**
     *   Ek strict judge prompt bana: `"You are an evaluator. You will grade a RAG-based QA Agent that answers questions from PDF cheatsheets (HTML, JavaScript, MySQL)."` — same `qwen2.5:7b` model as judge (yahi tera ek available model hai).
     *   Agent ka output `<output>` XML tags ke andar inject kar. Force the LLM to output pure JSON `{"reasoning": "...", "score": 5}`.
