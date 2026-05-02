@@ -1,4 +1,9 @@
 import os
+
+# Production Lock: Disable LangSmith tracing for main.py to keep it clean
+os.environ["LANGCHAIN_TRACING_V2"] = "false"
+os.environ["LANGCHAIN_PROJECT"] = "prod-agentic-rag"  # Optional: future-proofing
+
 import sys
 from langchainhub import Client
 
