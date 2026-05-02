@@ -18,8 +18,21 @@ load_dotenv()
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+class SafeChatOllama(ChatOllama):
+    """
+    Ragas 0.2.x passes 'temperature' as a kwarg to async methods.
+    Langchain's Ollama integration raises TypeError for this. Intercept and remove it.
+    """
+    async def ainvoke(self, input, **kwargs):
+        kwargs.pop('temperature', None)
+        return await super().ainvoke(input, **kwargs)
+        
+    async def agenerate(self, messages, stop=None, callbacks=None, **kwargs):
+        kwargs.pop('temperature', None)
+        return await super().agenerate(messages, stop=stop, callbacks=callbacks, **kwargs)
+
 # 1️⃣ Local LLM & Embeddings (Under Test)
-local_llm = ChatOllama(model=OLLAMA_MODEL, temperature=0.7)
+local_llm = SafeChatOllama(model=OLLAMA_MODEL, temperature=0.0)
 local_embeddings = OllamaEmbeddings(model=OLLAMA_EMBEDDING_MODEL)
 
 # 2️⃣ Cloud Fallback (Zero Downtime)

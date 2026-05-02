@@ -12,6 +12,7 @@ load_dotenv()
 
 # Step 6 requirement: Ensure LANGCHAIN_TRACING_V2 is enabled
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = "llm-eval-suite"
 
 from eval_engine.eval_config import local_llm, local_embeddings, eval_tracer
 from eval_engine.mock_datasets import QUESTIONS, GROUND_TRUTH_ANSWERS, SAMPLE_CONTEXTS
@@ -19,18 +20,23 @@ from langchain_core.runnables import RunnableConfig
 
 from ragas import evaluate, EvaluationDataset, SingleTurnSample
 from ragas.metrics import faithfulness, context_precision, context_recall
+from ragas.llms import LangchainLLMWrapper
+from ragas.embeddings import LangchainEmbeddingsWrapper
+from ragas.run_config import RunConfig
 
 if __name__ == "__main__":
     print("Setting up RAG Triad Evaluation...")
 
-    # Step 4: Loading metrics and binding local models
-    faithfulness.llm = local_llm
-    context_precision.llm = local_llm
-    context_recall.llm = local_llm
+    # Step 4: Loading metrics and binding local models (Wrapped for Ragas 0.2.6)
+    ragas_llm = LangchainLLMWrapper(local_llm)
+    ragas_embeddings = LangchainEmbeddingsWrapper(local_embeddings)
     
+    faithfulness.llm = ragas_llm
+    context_precision.llm = ragas_llm
+    context_recall.llm = ragas_llm
     
-    context_precision.embeddings = local_embeddings
-    context_recall.embeddings = local_embeddings
+    context_precision.embeddings = ragas_embeddings
+    context_recall.embeddings = ragas_embeddings
 
     # Step 5: Create samples using data from mock_datasets.py
     # Pick one HTML (idx 0), one JS (idx 5), and one SQL (idx 7)
@@ -59,15 +65,20 @@ if __name__ == "__main__":
     # Creating EvaluationDataset
     eval_dataset = EvaluationDataset(samples=[sample1, sample2, sample3])
 
+
+
     print("Running EvaluationDataset with local LLM and Embeddings...")
     
     # Executing the RAG triad metrics
+    # Added RunConfig with high timeout and max_workers=1 so Ollama isn't overwhelmed
+    run_config = RunConfig(timeout=300, max_workers=1)
+    
     result = evaluate(
         dataset=eval_dataset,
         metrics=[faithfulness, context_precision, context_recall],
-        llm=local_llm,
-        embeddings=local_embeddings,
-        run_config=RunnableConfig(callbacks=[eval_tracer])
+        llm=ragas_llm,
+        embeddings=ragas_embeddings,
+        run_config=run_config
     )
 
     # Convert to pandas dataframe
